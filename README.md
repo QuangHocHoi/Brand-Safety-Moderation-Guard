@@ -12,7 +12,7 @@
   - Khoanh vùng chính xác mốc thời gian (`MM:SS - MM:SS`) xuất hiện hành vi xô xát, bạo lực thị giác.
 - **Kiểm duyệt Ngôn từ Độc hại Tiếng Việt (Vietnamese Hate Speech Detection):**
   - Làm sạch văn bản và tách từ ghép tiếng Việt tự động bằng thư viện **PyVi** (`ViTokenizer`).
-  - Trích xuất đặc trưng TF-IDF kết hợp mô hình phân loại học máy (`vihsd_model.pkl` huấn luyện trên bộ dữ liệu ViHSD) để dự đoán xác suất vi phạm tiêu chuẩn cộng đồng.
+  - Trích xuất đặc trưng TF-IDF kết hợp mô hình phân loại học máy (`vihsd_model.pkl`) để dự đoán xác suất vi phạm tiêu chuẩn cộng đồng.
 - **Chấm điểm An toàn Thương hiệu (Brand Safety Score):**
   - Hợp nhất rủi ro từ cả hai luồng Hình ảnh ($P_{\text{visual}}$) và Ngôn từ ($P_{\text{text}}$):
     $$\text{Safety Score} = (1 - \max(P_{\text{visual}}, P_{\text{text}})) \times 100\%$$
