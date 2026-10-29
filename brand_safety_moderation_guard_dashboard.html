@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brand Safety & Moderation Guard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #070b14;
+            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+        }
+        .gauge-circle {
+            transition: stroke-dashoffset 0.6s ease, stroke 0.4s ease;
+        }
+        .window-active {
+            outline: 2px solid #38bdf8;
+            outline-offset: 2px;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+
+    <!-- ==================== HEADER ==================== -->
+    <header class="border-b border-slate-800 bg-slate-950/90 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-[1500px] mx-auto px-6 py-3.5 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                    <i class="fa-solid fa-shield-halved text-white text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-extrabold tracking-tight text-white">
+                        Brand Safety & Moderation Guard
+                    </h1>
+                    
+                </div>
+            </div>
+
+            <div id="serverStatusBadge" class="px-3.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 flex items-center gap-2 text-xs font-mono text-slate-300">
+                <span id="statusDot" class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
+                <span id="statusText">Chờ tải video kiểm duyệt...</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <main class="flex-1 max-w-[1500px] w-full mx-auto px-6 py-6 space-y-6">
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+            <!-- ==================== CỘT TRÁI: TẢI VIDEO & NHẬP CAPTION ==================== -->
+            <section class="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col gap-5 shadow-xl">
+                <div class="border-b border-slate-800 pb-3">
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-upload text-indigo-400"></i>
+                        Đầu vào Kiểm duyệt
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Tải video lên để tự động chạy <span class="font-mono text-cyan-400">predict.py</span></p>
+                </div>
+
+                <!-- 1. Nút tải Video -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-2">
+                        1. Chọn hoặc kéo thả Video cần kiểm duyệt (.mp4, .avi, .mov):
+                    </label>
+                    <div id="dropZone" class="relative border-2 border-dashed border-slate-700 hover:border-indigo-500 bg-slate-950/70 rounded-xl p-6 text-center cursor-pointer transition group">
+                        <input type="file" id="videoInput" accept="video/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                        <div class="flex flex-col items-center justify-center gap-2">
+                            <div class="w-12 h-12 rounded-full bg-indigo-500/15 text-indigo-400 flex items-center justify-center group-hover:scale-105 transition">
+                                <i class="fa-solid fa-file-video text-xl"></i>
+                            </div>
+                            <p id="fileNameDisplay" class="text-xs font-semibold text-slate-200">
+                                Bấm vào đây để chọn Video từ máy tính
+                            </p>
+                            <p id="fileSizeDisplay" class="text-[11px] text-slate-500 font-mono">
+                                Chưa có file nào được chọn
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Ô nhập Caption -->
+                <div class="flex flex-col gap-2">
+                    <label for="captionInput" class="text-xs font-semibold text-slate-300">
+                        2. Nội dung Caption đi kèm (Tuỳ chọn - kiểm duyệt bằng <span class="font-mono text-purple-400">vihsd.pkl</span>):
+                    </label>
+                    <textarea id="captionInput" rows="3" class="w-full rounded-xl bg-slate-950 border border-slate-700 focus:border-indigo-500 focus:outline-none p-3 text-xs text-slate-200 resize-none" placeholder="Nhập nội dung bài đăng hoặc phụ đề tiếng Việt (nếu có)..."></textarea>
+
+                    <!-- Kết quả tách từ PyVi trả về từ predict.py -->
+                    <div class="bg-slate-950 border border-slate-800 rounded-lg p-2.5">
+                        <div class="text-[10px] font-mono text-slate-400 mb-1">
+                            <i class="fa-solid fa-code text-purple-400 mr-1"></i>Output tách từ PyVi (<span class="text-slate-300">tokenized_caption</span>):
+                        </div>
+                        <div id="tokenizedOutput" class="text-[11px] font-mono text-slate-400 break-words">
+                            Chưa có dữ liệu...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Nút Chạy Predict -->
+                <div>
+                    <button id="predictBtn" onclick="sendToPredict()" class="w-full py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2 transition">
+                        <i id="predictBtnIcon" class="fa-solid fa-microchip"></i>
+                        <span id="predictBtnText">Phát Hiện</span>
+                    </button>
+
+                    <!-- Trạng thái đang chạy -->
+                    <div id="loadingBox" class="hidden mt-3 bg-slate-950 border border-indigo-500/40 rounded-xl p-3 text-xs font-mono text-cyan-300 flex items-center gap-2.5">
+                        <i class="fa-solid fa-circle-notch fa-spin text-indigo-400 text-sm"></i>
+                        <span id="loadingText">Đang chạy predict.py (cắt 16 frames/3s &amp; phân tích)...</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== CỘT PHẢI: KẾT QUẢ TỪ PREDICT.PY ==================== -->
+            <div class="lg:col-span-8 flex flex-col gap-6">
+
+                <!-- 1. BẢNG ĐIỂM BRAND SAFETY & XÁC SUẤT 2 LUỒNG -->
+                <section class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3 mb-4">
+                        <div>
+                            <h2 class="text-sm font-bold uppercase tracking-wider text-slate-200">
+                                Kết quả Đánh giá Rủi ro (Output từ <span class="font-mono text-cyan-400">predict.py</span>)
+                            </h2>
+                            <p class="text-[11px] text-slate-400 font-mono">
+                                Brand Safety Score (%) = (1 - max(P_visual, P_text)) × 100%
+                            </p>
+                        </div>
+                        <div id="statusBadge" class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-slate-800 text-slate-400 border border-slate-700">
+                            Chưa phân tích
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                        <!-- Đồng hồ Brand Safety Score -->
+                        <div class="md:col-span-4 bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-col items-center justify-center">
+                            <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Brand Safety Score</span>
+                            <div class="relative w-32 h-32 my-2 flex items-center justify-center">
+                                <svg class="w-full h-full -rotate-90 transform" viewBox="0 0 120 120">
+                                    <circle cx="60" cy="60" r="50" fill="transparent" stroke="#1e293b" stroke-width="10"></circle>
+                                    <circle id="gaugeArc" class="gauge-circle" cx="60" cy="60" r="50" fill="transparent" stroke="#475569" stroke-width="10" stroke-linecap="round" stroke-dasharray="314.16" stroke-dashoffset="314.16"></circle>
+                                </svg>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span id="scoreValue" class="text-2xl font-extrabold font-mono text-white">--%</span>
+                                    <span id="levelLabel" class="text-[10px] font-mono text-slate-400 mt-0.5">Chờ dữ liệu</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Output Luồng 1: violence.h5 -->
+                        <div class="md:col-span-4 bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-xs font-bold text-cyan-400">Luồng Video </span>
+                                    <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300">P_visual</span>
+                                </div>
+                                <p class="text-[11px] text-slate-400">Xác suất bạo lực thị giác cao nhất giữa các phân đoạn 3 giây:</p>
+                            </div>
+                            <div class="mt-4">
+                                <div class="flex items-center justify-between text-xs font-mono mb-1.5">
+                                    <span class="text-slate-400">Rủi ro Hình ảnh:</span>
+                                    <span id="pVisualValue" class="text-sm font-bold text-slate-200">0%</span>
+                                </div>
+                                <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
+                                    <div id="pVisualBar" class="h-full bg-cyan-500 transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Output Luồng 2: vihsd.pkl -->
+                        <div class="md:col-span-4 bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-xs font-bold text-purple-400">Luồng Ngôn ngữ </span>
+                                    <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/10 text-purple-300">P_text</span>
+                                </div>
+                                <p class="text-[11px] text-slate-400">Xác suất ngôn từ thù ghét / độc hại tiếng Việt:</p>
+                            </div>
+                            <div class="mt-4">
+                                <div class="flex items-center justify-between text-xs font-mono mb-1.5">
+                                    <span class="text-slate-400">Rủi ro Ngôn từ:</span>
+                                    <span id="pTextValue" class="text-sm font-bold text-slate-200">0%</span>
+                                </div>
+                                <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
+                                    <div id="pTextBar" class="h-full bg-purple-500 transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. TRÌNH PHÁT VIDEO NGƯỜI DÙNG TẢI LÊN & TIMELINE 3 GIÂY -->
+                <section class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-sm font-bold uppercase tracking-wider text-slate-200">
+                            Trình phát Video &amp; Timeline Phân đoạn 3 Giây
+                        </h2>
+                        <span id="segmentCountLabel" class="text-xs font-mono text-slate-400">0 phân đoạn</span>
+                    </div>
+
+                    <!-- Khung chứa Video (Mặc định trống cho đến khi người dùng tải video lên) -->
+                    <div class="relative w-full aspect-video max-h-[380px] bg-slate-950 rounded-xl overflow-hidden border border-slate-800 flex items-center justify-center">
+                        <!-- Trạng thái trống khi chưa chọn video -->
+                        <div id="emptyVideoPlaceholder" class="text-center p-6 text-slate-500 space-y-2">
+                            <i class="fa-solid fa-video-slash text-3xl text-slate-600"></i>
+                            <p class="text-xs font-medium text-slate-400">Chưa có video nào được tải lên</p>
+                            <p class="text-[11px] text-slate-500">Hãy chọn file video ở cột bên trái để hiển thị và kiểm duyệt</p>
+                        </div>
+
+                        <!-- Trình phát Video thật của người dùng -->
+                        <video id="userVideoPlayer" class="w-full h-full object-contain hidden" controls playsinline></video>
+                    </div>
+
+                    <!-- Thanh Timeline các phân đoạn 3 giây do predict.py trả về -->
+                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5">
+                        <div class="text-xs font-semibold text-slate-300 mb-2">
+                            Các phân đoạn 3 giây từ <span class="font-mono text-cyan-400">predict.py</span> (Bấm vào phân đoạn để tua video tới vị trí đó):
+                        </div>
+                        <div id="timelineContainer" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                            <div class="col-span-full py-3 text-center text-xs font-mono text-slate-500">
+                                Chưa có dữ liệu phân đoạn. Vui lòng tải video lên để phân tích.
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+
+        <!-- ==================== BẢNG CHI TIẾT TỪNG PHÂN ĐOẠN (AUDIT LOG) ==================== -->
+        <section class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-3">
+            <h2 class="text-sm font-bold uppercase tracking-wider text-slate-200">
+                Bảng Chi tiết Kết quả Kiểm duyệt từng Phân đoạn (Output Segments)
+            </h2>
+            <div class="overflow-x-auto rounded-xl border border-slate-800">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-950 text-slate-400 text-[11px] font-bold uppercase border-b border-slate-800">
+                            <th class="py-3 px-4">Mốc thời gian</th>
+                            <th class="py-3 px-4">Trạng thái phân đoạn</th>
+                            <th class="py-3 px-4">Ghi chú từ predict.py</th>
+                            <th class="py-3 px-4 text-right">Xác suất bạo lực (Risk %)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="segmentsTableBody" class="divide-y divide-slate-800 text-xs bg-slate-950/40">
+                        <tr>
+                            <td colspan="4" class="py-8 text-center text-slate-500 font-mono">
+                                Chưa có dữ liệu kiểm duyệt.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ==================== JAVASCRIPT KẾT NỐI TRỰC TIẾP PREDICT.PY ==================== -->
+    <script>
+        const API_URL = "http://127.0.0.1:8000/api/moderate";
+        let selectedVideoFile = null;
+        let currentSegments = [];
+
+        const videoInput = document.getElementById('videoInput');
+        const userVideoPlayer = document.getElementById('userVideoPlayer');
+        const emptyVideoPlaceholder = document.getElementById('emptyVideoPlaceholder');
+
+        // 1. Khi người dùng chọn file video -> Hiển thị lên trình phát và tự động gọi predict.py
+        videoInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                handleVideoSelected(e.target.files[0]);
+            }
+        });
+
+        function handleVideoSelected(file) {
+            selectedVideoFile = file;
+
+            // Hiển thị thông tin file
+            document.getElementById('fileNameDisplay').textContent = file.name;
+            document.getElementById('fileSizeDisplay').textContent = `${(file.size / (1024 * 1024)).toFixed(2)} MB`;
+
+            // Đưa video người dùng vừa chọn vào thẻ <video>
+            const fileURL = URL.createObjectURL(file);
+            emptyVideoPlaceholder.classList.add('hidden');
+            userVideoPlayer.classList.remove('hidden');
+            userVideoPlayer.src = fileURL;
+
+            // Tự động gọi sang predict.py ngay sau khi tải video lên
+            sendToPredict();
+        }
+
+        // 2. Hàm gửi Video + Caption sang server.py -> chạy predict.py và nhận Output
+        async function sendToPredict() {
+            const captionText = document.getElementById('captionInput').value.trim();
+
+            if (!selectedVideoFile && !captionText) {
+                alert("Vui lòng chọn một file Video hoặc nhập Caption để kiểm duyệt!");
+                return;
+            }
+
+            const btn = document.getElementById('predictBtn');
+            const loadingBox = document.getElementById('loadingBox');
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+
+            btn.disabled = true;
+            btn.classList.add('opacity-60');
+            loadingBox.classList.remove('hidden');
+            statusDot.className = "w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping";
+            statusText.textContent = "Đang xử lý tại predict.py...";
+
+            try {
+                const formData = new FormData();
+                if (selectedVideoFile) {
+                    formData.append("video", selectedVideoFile);
+                }
+                formData.append("caption", captionText);
+
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Lỗi Server (${response.status})`);
+                }
+
+                const result = await response.json();
+                renderPredictOutput(result);
+
+                statusDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400";
+                statusText.textContent = "Đã nhận Output từ predict.py";
+
+            } catch (err) {
+                console.error(err);
+                statusDot.className = "w-2.5 h-2.5 rounded-full bg-rose-500";
+                statusText.textContent = "Lỗi kết nối server.py (Hãy bật uvicorn)";
+                alert("Không kết nối được với server.py! Bạn hãy kiểm tra xem đã chạy lệnh 'python -m uvicorn server:app --reload' trong Terminal chưa nhé.");
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('opacity-60');
+                loadingBox.classList.add('hidden');
+            }
+        }
+
+        // 3. Hiển thị trực tiếp Output của predict.py lên giao diện HTML
+        function renderPredictOutput(data) {
+            const score = data.safety_score ?? 0;
+            const pVis = data.p_visual ?? 0;
+            const pTxt = data.p_text ?? 0;
+
+            // Cập nhật Đồng hồ Brand Safety Score
+            const circumference = 314.16;
+            const offset = circumference - (score / 100) * circumference;
+            const gaugeArc = document.getElementById('gaugeArc');
+            gaugeArc.style.strokeDashoffset = offset;
+
+            document.getElementById('scoreValue').textContent = `${score}%`;
+            document.getElementById('levelLabel').textContent = data.level_label || data.status;
+
+            const statusBadge = document.getElementById('statusBadge');
+            if (score >= 80) {
+                gaugeArc.setAttribute('stroke', '#10b981');
+                statusBadge.className = "px-3 py-1 rounded-full text-xs font-bold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
+                statusBadge.textContent = data.level_label || "AN TOÀN";
+            } else if (score >= 50) {
+                gaugeArc.setAttribute('stroke', '#f59e0b');
+                statusBadge.className = "px-3 py-1 rounded-full text-xs font-bold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40";
+                statusBadge.textContent = data.level_label || "CẢNH BÁO";
+            } else {
+                gaugeArc.setAttribute('stroke', '#f43f5e');
+                statusBadge.className = "px-3 py-1 rounded-full text-xs font-bold uppercase bg-rose-500/20 text-rose-300 border border-rose-500/40";
+                statusBadge.textContent = data.level_label || "VI PHẠM / NGUY HIỂM";
+            }
+
+            // Cập nhật thanh xác suất P_visual & P_text
+            document.getElementById('pVisualValue').textContent = `${pVis}%`;
+            document.getElementById('pVisualBar').style.width = `${Math.min(100, pVis)}%`;
+            document.getElementById('pVisualBar').className = `h-full transition-all duration-500 ${pVis >= 50 ? 'bg-rose-500' : 'bg-cyan-500'}`;
+
+            document.getElementById('pTextValue').textContent = `${pTxt}%`;
+            document.getElementById('pTextBar').style.width = `${Math.min(100, pTxt)}%`;
+            document.getElementById('pTextBar').className = `h-full transition-all duration-500 ${pTxt >= 50 ? 'bg-rose-500' : 'bg-purple-500'}`;
+
+            // Cập nhật kết quả tách từ PyVi
+            document.getElementById('tokenizedOutput').textContent = data.tokenized_caption || "Không có văn bản đầu vào";
+
+            // Cập nhật danh sách phân đoạn 3 giây (segments) từ predict.py
+            currentSegments = data.segments || [];
+            document.getElementById('segmentCountLabel').textContent = `${currentSegments.length} phân đoạn (3s/đoạn)`;
+
+            const timelineContainer = document.getElementById('timelineContainer');
+            const tableBody = document.getElementById('segmentsTableBody');
+
+            if (currentSegments.length === 0) {
+                timelineContainer.innerHTML = `<div class="col-span-full py-3 text-center text-xs font-mono text-slate-500">Không có phân đoạn video nào.</div>`;
+                tableBody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-slate-500 font-mono">Không có phân đoạn video.</td></tr>`;
+                return;
+            }
+
+            // Vẽ các ô Timeline 3 giây
+            timelineContainer.innerHTML = currentSegments.map((seg, idx) => {
+                const isViolent = seg.risk >= 50 || seg.type === "VISION_VIOLENCE";
+                const boxStyle = isViolent
+                    ? "bg-rose-950/80 border-rose-500 text-rose-200 hover:bg-rose-900"
+                    : "bg-emerald-950/50 border-emerald-500/40 text-emerald-200 hover:bg-emerald-900/50";
+
+                return `
+                    <button onclick="seekToSegment(${idx})" id="segBtn-${idx}" class="p-2.5 rounded-xl border text-left transition flex flex-col gap-1 ${boxStyle}">
+                        <div class="flex items-center justify-between font-mono text-[11px] font-bold">
+                            <span>${seg.time_label}</span>
+                            <i class="fa-solid ${isViolent ? 'fa-triangle-exclamation text-rose-400' : 'fa-check text-emerald-400'}"></i>
+                        </div>
+                        <div class="text-[10px] font-mono opacity-90">
+                            Risk: <strong>${seg.risk}%</strong>
+                        </div>
+                    </button>
+                `;
+            }).join('');
+
+            // Vẽ bảng chi tiết từng phân đoạn
+            tableBody.innerHTML = currentSegments.map((seg, idx) => {
+                const isViolent = seg.risk >= 50 || seg.type === "VISION_VIOLENCE";
+                const badge = isViolent
+                    ? `<span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-semibold">VI PHẠM BẠO LỰC</span>`
+                    : `<span class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">AN TOÀN</span>`;
+
+                return `
+                    <tr onclick="seekToSegment(${idx})" class="hover:bg-slate-800/60 cursor-pointer transition">
+                        <td class="py-3 px-4 font-mono font-bold text-cyan-400">${seg.time_label}</td>
+                        <td class="py-3 px-4">${badge}</td>
+                        <td class="py-3 px-4 text-slate-300">${seg.note}</td>
+                        <td class="py-3 px-4 text-right font-mono font-bold ${isViolent ? 'text-rose-400' : 'text-emerald-400'}">${seg.risk}%</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // 4. Bấm vào phân đoạn nào thì tua video của người dùng đến đúng giây đó
+        function seekToSegment(idx) {
+            const seg = currentSegments[idx];
+            if (!seg) return;
+
+            currentSegments.forEach((_, i) => {
+                const btn = document.getElementById(`segBtn-${i}`);
+                if (btn) {
+                    if (i === idx) btn.classList.add('window-active');
+                    else btn.classList.remove('window-active');
+                }
+            });
+
+            if (userVideoPlayer && userVideoPlayer.readyState >= 1) {
+                userVideoPlayer.currentTime = seg.start;
+                userVideoPlayer.play().catch(() => {});
+            }
+        }
+    </script>
+</body>
+</html>

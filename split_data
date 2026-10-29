@@ -1,0 +1,46 @@
+import os
+import pandas as pd
+from sklearn.model_selection import train_test_split
+
+# Đường dẫn đến thư mục vihsd_data trên ổ F:
+BASE_DIR = r"F:\SICT MediaTech Solutions Challenge"
+NLP_DIR = os.path.join(BASE_DIR, "vihsd_data")
+
+# 1. Đọc và gộp 2 file train.csv và test.csv có sẵn
+file_train = os.path.join(NLP_DIR, "train.csv")
+file_test = os.path.join(NLP_DIR, "test.csv")
+
+df_train_old = pd.read_csv(file_train)
+df_test_old = pd.read_csv(file_test)
+df_full = pd.concat([df_train_old, df_test_old], ignore_index=True)
+
+# Lấy tên cột văn bản và cột nhãn tự động
+text_col = df_full.columns[0]
+label_col = df_full.columns[1]
+
+# Làm sạch các dòng bị thiếu dữ liệu
+df_full = df_full.dropna(subset=[text_col, label_col])
+
+# Đồng bộ nhãn về dạng nhị phân 0 và 1 (nếu cần)
+df_full["label"] = df_full[label_col].apply(lambda x: 1 if int(x) > 0 else 0)
+
+print(f"Tổng số lượng dòng dữ liệu văn bản: {len(df_full)}")
+
+# 2. Chia tỷ lệ 70% Train - 20% Val - 10% Test (có stratify giữ cân bằng nhãn)
+df_train, df_temp = train_test_split(
+    df_full, test_size=0.30, random_state=42, stratify=df_full["label"]
+)
+
+df_val, df_test = train_test_split(
+    df_temp, test_size=(1/3), random_state=42, stratify=df_temp["label"]
+)
+
+# 3. Lưu đè lại thành 3 file train.csv, val.csv, test.csv vào đúng thư mục vihsd_data
+df_train.to_csv(os.path.join(NLP_DIR, "train.csv"), index=False)
+df_val.to_csv(os.path.join(NLP_DIR, "val.csv"), index=False)
+df_test.to_csv(os.path.join(NLP_DIR, "test.csv"), index=False)
+
+print(f"Phân chia Text thành công!")
+print(f" - Train (70%): {len(df_train)} dòng -> Lưu tại train.csv")
+print(f" - Val   (20%): {len(df_val)} dòng -> Lưu tại val.csv")
+print(f" - Test  (10%): {len(df_test)} dòng -> Lưu tại test.csv")
