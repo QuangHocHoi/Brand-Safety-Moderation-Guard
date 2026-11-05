@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="vi" class="dark">
+<html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,239 +8,607 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <script>
         tailwind.config = {
-            darkMode: 'class',
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace'],
-                    }
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        slate: {
+                            50: '#F8FAFC', 100: '#F1F5F9', 150: '#EEF2F7',
+                            200: '#E2E8F0', 300: '#CBD5E1', 400: '#94A3B8',
+                            500: '#64748B', 600: '#475569', 700: '#334155',
+                            800: '#1E293B', 900: '#0F172A',
+                        }
+                    },
+                    boxShadow: { 'xs': '0 1px 2px 0 rgb(0 0 0 / 0.05)' }
                 }
             }
         }
     </script>
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            background-color: #070b14;
-            color: #e2e8f0;
+            background-color: #F8FAFC;
+            color: #334155;
             font-family: 'Inter', sans-serif;
+            font-size: 14px;
         }
-        .gauge-circle {
-            transition: stroke-dashoffset 0.6s ease, stroke 0.4s ease;
+
+        .progress-bar {
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .window-active {
-            outline: 2px solid #38bdf8;
+
+        .row-active {
+            background-color: #EFF6FF !important;
+            outline: 1.5px solid #BFDBFE;
+            outline-offset: -1.5px;
+        }
+
+        .seg-btn-active {
+            outline: 2px solid #2563EB;
             outline-offset: 2px;
-            transform: translateY(-2px);
+        }
+
+        textarea:focus,
+        input[type="file"]:focus {
+            outline: 2px solid #2563EB;
+            outline-offset: 1px;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid #E2E8F0;
+            border-radius: 10px;
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        }
+
+        /* Scrollbar nhỏ */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #F1F5F9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 4px;
+        }
+
+        /* Spinner */
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spin {
+            animation: spin 0.9s linear infinite;
+        }
+
+        /* Neon bị loại bỏ hoàn toàn */
+        .btn-primary {
+            background: #2563EB;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 10px 20px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.15s;
+        }
+
+        .btn-primary:hover {
+            background: #1D4ED8;
+        }
+
+        .btn-primary:disabled {
+            background: #93C5FD;
+            cursor: not-allowed;
+        }
+
+        /* Scenario nav buttons */
+        .scenario-btn {
+            border: 1px solid #E2E8F0;
+            background: #fff;
+            color: #475569;
+            border-radius: 7px;
+            padding: 5px 13px;
+            font-size: 12.5px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+
+        .scenario-btn:hover {
+            border-color: #94A3B8;
+            color: #0F172A;
+            background: #F8FAFC;
+        }
+
+        .scenario-btn.active-danger {
+            background: #FFF1F2;
+            border-color: #FDA4AF;
+            color: #BE123C;
+            font-weight: 600;
+        }
+
+        .scenario-btn.active-safe {
+            background: #F0FDF4;
+            border-color: #86EFAC;
+            color: #15803D;
+            font-weight: 600;
+        }
+
+        .scenario-btn.active-warn {
+            background: #FFFBEB;
+            border-color: #FCD34D;
+            color: #92400E;
+            font-weight: 600;
+        }
+
+        /* Drop zone */
+        #dropZone {
+            transition: border-color 0.15s, background 0.15s;
+        }
+
+        #dropZone.drag-over {
+            border-color: #2563EB;
+            background: #EFF6FF;
+        }
+
+        /* Video overlay */
+        #sensitiveOverlay {
+            position: absolute;
+            inset: 0;
+            z-index: 10;
+            background: rgba(15, 23, 42, 0.78);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            backdrop-filter: blur(6px);
+        }
+
+        /* Table row hover */
+        #segmentsTableBody tr {
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+
+        #segmentsTableBody tr:hover {
+            background: #F8FAFC;
+        }
+
+        /* KPI badge */
+        .kpi-badge-danger {
+            background: #FFF1F2;
+            color: #BE123C;
+            border: 1.5px solid #FECDD3;
+        }
+
+        .kpi-badge-safe {
+            background: #F0FDF4;
+            color: #15803D;
+            border: 1.5px solid #BBF7D0;
+        }
+
+        .kpi-badge-warn {
+            background: #FFFBEB;
+            color: #92400E;
+            border: 1.5px solid #FDE68A;
+        }
+
+        .kpi-badge-idle {
+            background: #F1F5F9;
+            color: #64748B;
+            border: 1.5px solid #E2E8F0;
+        }
+
+        /* Breadcrumb */
+        .breadcrumb-sep {
+            color: #CBD5E1;
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+
+<body class="min-h-screen flex flex-col">
 
     <!-- ==================== HEADER ==================== -->
-    <header class="border-b border-slate-800 bg-slate-950/90 backdrop-blur-md sticky top-0 z-40">
-        <div class="max-w-[1500px] mx-auto px-6 py-3.5 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                    <i class="fa-solid fa-shield-halved text-white text-lg"></i>
+    <header style="background:#fff; border-bottom:1px solid #E2E8F0; position:sticky; top:0; z-index:40;">
+        <div
+            style="max-width:1500px; margin:0 auto; padding:0 24px; height:58px; display:flex; align-items:center; justify-content:space-between; gap:16px;">
+
+            <!-- Logo + Tiêu đề + Breadcrumb -->
+            <div style="display:flex; align-items:center; gap:12px; min-width:0;">
+                <div
+                    style="width:36px; height:36px; background:#2563EB; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                    <i class="fa-solid fa-shield-halved" style="color:#fff; font-size:17px;"></i>
                 </div>
-                <div>
-                    <h1 class="text-lg font-extrabold tracking-tight text-white">
-                        Brand Safety & Moderation Guard
-                    </h1>
-                    
+                <div style="min-width:0;">
+                    <div style="font-size:14.5px; font-weight:700; color:#0F172A; white-space:nowrap;">
+                        Brand Safety &amp; Moderation Guard
+                    </div>
+                    <div style="font-size:11.5px; color:#94A3B8; display:flex; align-items:center; gap:5px;">
+                        <span>Bảng điều khiển</span>
+                        <span class="breadcrumb-sep">/</span>
+                        <span style="color:#2563EB; font-weight:500;">Kiểm duyệt đa phương thức</span>
+                    </div>
                 </div>
             </div>
 
-            <div id="serverStatusBadge" class="px-3.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 flex items-center gap-2 text-xs font-mono text-slate-300">
-                <span id="statusDot" class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
-                <span id="statusText">Chờ tải video kiểm duyệt...</span>
+            <!-- Scenario Buttons + Status -->
+            <div style="display:flex; align-items:center; gap:8px; flex-shrink:0; flex-wrap:wrap;">
+                <!-- Trạng thái kết nối server nhỏ gọn -->
+                <div id="serverStatusBadge"
+                    style="display:flex; align-items:center; gap:6px; padding:5px 11px; border:1px solid #E2E8F0; border-radius:7px; background:#F8FAFC; font-size:11.5px; color:#64748B; margin-left:4px;">
+                    <span id="statusDot"
+                        style="width:8px; height:8px; border-radius:50%; background:#CBD5E1; display:inline-block; flex-shrink:0;"></span>
+                    <span id="statusText">Chờ tải video...</span>
+                </div>
             </div>
         </div>
     </header>
 
-    <!-- ==================== MAIN CONTENT ==================== -->
-    <main class="flex-1 max-w-[1500px] w-full mx-auto px-6 py-6 space-y-6">
+    <!-- ==================== MAIN ==================== -->
+    <main
+        style="max-width:1500px; width:100%; margin:0 auto; padding:24px; flex:1; display:flex; flex-direction:column; gap:20px;">
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <!-- ROW 1: Input Panel + Main Workspace -->
+        <div style="display:grid; grid-template-columns:360px 1fr; gap:20px; align-items:start;">
 
-            <!-- ==================== CỘT TRÁI: TẢI VIDEO & NHẬP CAPTION ==================== -->
-            <section class="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col gap-5 shadow-xl">
-                <div class="border-b border-slate-800 pb-3">
-                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
-                        <i class="fa-solid fa-upload text-indigo-400"></i>
-                        Đầu vào Kiểm duyệt
+            <!-- ============ CỘT TRÁI: INPUT PANEL ============ -->
+            <section class="card" style="padding:20px; display:flex; flex-direction:column; gap:18px;">
+
+                <!-- Header card -->
+                <div style="border-bottom:1px solid #F1F5F9; padding-bottom:14px;">
+                    <h2
+                        style="font-size:13.5px; font-weight:700; color:#0F172A; display:flex; align-items:center; gap-7px;">
+                        <i class="fa-solid fa-layer-group" style="color:#2563EB; margin-right:7px;"></i>Dữ liệu nguồn
+                        cần đối soát
                     </h2>
-                    <p class="text-xs text-slate-400 mt-0.5">Tải video lên để tự động chạy <span class="font-mono text-cyan-400">predict.py</span></p>
                 </div>
 
-                <!-- 1. Nút tải Video -->
+                <!-- Upload Video -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-2">
-                        1. Chọn hoặc kéo thả Video cần kiểm duyệt (.mp4, .avi, .mov):
+                    <label style="font-size:12px; font-weight:600; color:#334155; display:block; margin-bottom:8px;">
+                        Video cần kiểm duyệt
+                        <span style="font-weight:400; color:#94A3B8;">(MP4 / MOV / AVI)</span>
                     </label>
-                    <div id="dropZone" class="relative border-2 border-dashed border-slate-700 hover:border-indigo-500 bg-slate-950/70 rounded-xl p-6 text-center cursor-pointer transition group">
-                        <input type="file" id="videoInput" accept="video/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
-                        <div class="flex flex-col items-center justify-center gap-2">
-                            <div class="w-12 h-12 rounded-full bg-indigo-500/15 text-indigo-400 flex items-center justify-center group-hover:scale-105 transition">
-                                <i class="fa-solid fa-file-video text-xl"></i>
+                    <div id="dropZone"
+                        style="position:relative; border:2px dashed #CBD5E1; border-radius:9px; padding:20px 16px; text-align:center; cursor:pointer; background:#FAFBFC;">
+                        <input type="file" id="videoInput" accept="video/*"
+                            style="position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; z-index:5;">
+
+                        <!-- Nút xóa -->
+                        <button type="button" id="clearVideoBtn" onclick="clearSelectedVideo(event)"
+                            style="display:none; position:absolute; top:8px; right:8px; z-index:10; width:26px; height:26px; border-radius:6px; border:1px solid #E2E8F0; background:#fff; color:#94A3B8; cursor:pointer; font-size:12px; align-items:center; justify-content:center;"
+                            title="Xóa file đã chọn">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+
+                        <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+                            <div
+                                style="width:40px; height:40px; border-radius:50%; background:#EFF6FF; display:flex; align-items:center; justify-content:center;">
+                                <i class="fa-solid fa-file-video" style="color:#2563EB; font-size:18px;"></i>
                             </div>
-                            <p id="fileNameDisplay" class="text-xs font-semibold text-slate-200">
-                                Bấm vào đây để chọn Video từ máy tính
+                            <p id="fileNameDisplay"
+                                style="font-size:12.5px; font-weight:600; color:#334155; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:0 8px;">
+                                Bấm hoặc kéo thả file vào đây
                             </p>
-                            <p id="fileSizeDisplay" class="text-[11px] text-slate-500 font-mono">
+                            <p id="fileSizeDisplay" style="font-size:11px; color:#94A3B8;">
                                 Chưa có file nào được chọn
                             </p>
                         </div>
                     </div>
                 </div>
 
-                <!-- 2. Ô nhập Caption -->
-                <div class="flex flex-col gap-2">
-                    <label for="captionInput" class="text-xs font-semibold text-slate-300">
-                        2. Nội dung Caption đi kèm (Tuỳ chọn - kiểm duyệt bằng <span class="font-mono text-purple-400">vihsd.pkl</span>):
-                    </label>
-                    <textarea id="captionInput" rows="3" class="w-full rounded-xl bg-slate-950 border border-slate-700 focus:border-indigo-500 focus:outline-none p-3 text-xs text-slate-200 resize-none" placeholder="Nhập nội dung bài đăng hoặc phụ đề tiếng Việt (nếu có)..."></textarea>
-
-                    <!-- Kết quả tách từ PyVi trả về từ predict.py -->
-                    <div class="bg-slate-950 border border-slate-800 rounded-lg p-2.5">
-                        <div class="text-[10px] font-mono text-slate-400 mb-1">
-                            <i class="fa-solid fa-code text-purple-400 mr-1"></i>Output tách từ PyVi (<span class="text-slate-300">tokenized_caption</span>):
-                        </div>
-                        <div id="tokenizedOutput" class="text-[11px] font-mono text-slate-400 break-words">
-                            Chưa có dữ liệu...
-                        </div>
+                <!-- Caption Input -->
+                <div>
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                        <label for="captionInput" style="font-size:12px; font-weight:600; color:#334155;">
+                            Caption / Nội dung bài đăng
+                        </label>
+                        <span id="charCounter" style="font-size:11px; color:#94A3B8;">0 ký tự</span>
                     </div>
+                    <textarea id="captionInput" rows="4"
+                        style="width:100%; border:1px solid #E2E8F0; border-radius:8px; padding:10px 12px; font-size:12.5px; color:#334155; background:#fff; resize:vertical; line-height:1.6;"
+                        placeholder="Nhập nội dung bài đăng tiếng Việt (nếu có)..."></textarea>
                 </div>
 
-                <!-- 3. Nút Chạy Predict -->
+                <!-- Nút Chạy phân tích -->
                 <div>
-                    <button id="predictBtn" onclick="sendToPredict()" class="w-full py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2 transition">
-                        <i id="predictBtnIcon" class="fa-solid fa-microchip"></i>
-                        <span id="predictBtnText">Phát Hiện</span>
+                    <button id="predictBtn" class="btn-primary" onclick="sendToPredict()"
+                        style="width:100%; justify-content:center;">
+                        <i id="predictBtnIcon" class="fa-solid fa-magnifying-glass"></i>
+                        <span id="predictBtnText">Phân tích</span>
                     </button>
 
-                    <!-- Trạng thái đang chạy -->
-                    <div id="loadingBox" class="hidden mt-3 bg-slate-950 border border-indigo-500/40 rounded-xl p-3 text-xs font-mono text-cyan-300 flex items-center gap-2.5">
-                        <i class="fa-solid fa-circle-notch fa-spin text-indigo-400 text-sm"></i>
-                        <span id="loadingText">Đang chạy predict.py (cắt 16 frames/3s &amp; phân tích)...</span>
+                    <!-- Loading indicator — chỉ hiện khi đang gọi API -->
+                    <div id="loadingBox"
+                        style="display:none; margin-top:10px; padding:10px 14px; background:#EFF6FF; border:1px solid #BFDBFE; border-radius:8px; font-size:12px; color:#1D4ED8; align-items:center; gap:8px;">
+                        <i class="fa-solid fa-circle-notch spin" style="font-size:13px;"></i>
+                        <span id="loadingText">Đang phân tích đa phương thức...</span>
                     </div>
                 </div>
+
+                <!-- OCR phụ đề compact -->
+                <div style="border-top:1px solid #F1F5F9; padding-top:14px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                        <span
+                            style="font-size:12px; font-weight:600; color:#475569; display:flex; align-items:center; gap:6px;">
+                            <i class="fa-solid fa-closed-captioning" style="color:#0EA5E9; font-size:11px;"></i>
+                            Phụ đề OCR phát hiện
+                        </span>
+                        <span id="ocrCountBadge"
+                            style="font-size:11px; background:#F1F5F9; color:#64748B; padding:2px 8px; border-radius:5px; font-weight:500;">0
+                            đoạn</span>
+                    </div>
+                    <div id="detectedSubtitlesOutput"
+                        style="font-size:11.5px; color:#64748B; max-height:80px; overflow-y:auto; line-height:1.7; background:#F8FAFC; border:1px solid #F1F5F9; border-radius:7px; padding:8px 10px;">
+                        Chưa quét phụ đề trong video...
+                    </div>
+                </div>
+
             </section>
 
-            <!-- ==================== CỘT PHẢI: KẾT QUẢ TỪ PREDICT.PY ==================== -->
-            <div class="lg:col-span-8 flex flex-col gap-6">
+            <!-- ============ CỘT PHẢI: MAIN WORKSPACE ============ -->
+            <div style="display:flex; flex-direction:column; gap:18px;">
 
-                <!-- 1. BẢNG ĐIỂM BRAND SAFETY & XÁC SUẤT 2 LUỒNG -->
-                <section class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
-                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3 mb-4">
+                <!-- KPI: Brand Safety Summary -->
+                <section class="card" style="padding:20px;">
+
+                    <!-- Badge trạng thái tổng + tiêu đề -->
+                    <div
+                        style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
                         <div>
-                            <h2 class="text-sm font-bold uppercase tracking-wider text-slate-200">
-                                Kết quả Đánh giá Rủi ro (Output từ <span class="font-mono text-cyan-400">predict.py</span>)
-                            </h2>
-                            <p class="text-[11px] text-slate-400 font-mono">
-                                Brand Safety Score (%) = (1 - max(P_visual, P_text)) × 100%
-                            </p>
+                            <div
+                                style="font-size:13px; font-weight:700; color:#0F172A; margin-bottom:2px; text-transform:uppercase; letter-spacing:0.04em;">
+                                Kết quả Đánh giá Rủi ro Đa phương thức</div>
+                            <div style="font-size:11.5px; color:#94A3B8; font-family:monospace;">Brand Safety Score (%)
+                                = (1 - max(P_visual, P_text)) × 100%</div>
                         </div>
-                        <div id="statusBadge" class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-slate-800 text-slate-400 border border-slate-700">
-                            Chưa phân tích
+                        <div id="statusBadge" class="kpi-badge-idle"
+                            style="padding:7px 16px; border-radius:8px; font-size:12.5px; font-weight:700; letter-spacing:0.03em; display:flex; align-items:center; gap:7px;">
+                            <span id="statusBadgeDot"
+                                style="width:8px; height:8px; border-radius:50%; background:#94A3B8; display:inline-block;"></span>
+                            <span id="statusBadgeText">Chưa phân tích</span>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-                        <!-- Đồng hồ Brand Safety Score -->
-                        <div class="md:col-span-4 bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-col items-center justify-center">
-                            <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Brand Safety Score</span>
-                            <div class="relative w-32 h-32 my-2 flex items-center justify-center">
-                                <svg class="w-full h-full -rotate-90 transform" viewBox="0 0 120 120">
-                                    <circle cx="60" cy="60" r="50" fill="transparent" stroke="#1e293b" stroke-width="10"></circle>
-                                    <circle id="gaugeArc" class="gauge-circle" cx="60" cy="60" r="50" fill="transparent" stroke="#475569" stroke-width="10" stroke-linecap="round" stroke-dasharray="314.16" stroke-dashoffset="314.16"></circle>
-                                </svg>
-                                <div class="absolute inset-0 flex flex-col items-center justify-center">
-                                    <span id="scoreValue" class="text-2xl font-extrabold font-mono text-white">--%</span>
-                                    <span id="levelLabel" class="text-[10px] font-mono text-slate-400 mt-0.5">Chờ dữ liệu</span>
-                                </div>
+                    <!-- 3 KPI Metrics -->
+                    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:14px;">
+
+                        <!-- Metric 1: Brand Safety Score -->
+                        <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:9px; padding:16px;">
+                            <div
+                                style="font-size:11px; font-weight:600; color:#64748B; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:10px;">
+                                Chỉ số An toàn Thương hiệu
                             </div>
+                            <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
+                                <span id="kpiSafetyScore"
+                                    style="font-size:28px; font-weight:800; color:#CBD5E1; line-height:1; font-family:monospace;">--%</span>
+                                <span id="kpiSafetyUnit"
+                                    style="font-size:13px; color:#94A3B8; margin-bottom:3px;"></span>
+                                <span id="kpiSafetyWaitBadge"
+                                    style="font-size:10.5px; background:#F1F5F9; color:#94A3B8; border:1px solid #E2E8F0; border-radius:5px; padding:2px 7px; font-weight:500;">Chờ
+                                    phân tích</span>
+                            </div>
+                            <div style="background:#E2E8F0; border-radius:4px; height:6px; overflow:hidden;">
+                                <div id="kpiSafetyBar" class="progress-bar"
+                                    style="height:100%; width:0%; background:#2563EB; border-radius:4px;"></div>
+                            </div>
+                            <div id="kpiSafetyLabel" style="font-size:11px; color:#94A3B8; margin-top:6px;">Chờ dữ liệu
+                                phân tích</div>
                         </div>
 
-                        <!-- Output Luồng 1: violence.h5 -->
-                        <div class="md:col-span-4 bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-col justify-between">
-                            <div>
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-xs font-bold text-cyan-400">Luồng Video </span>
-                                    <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300">P_visual</span>
-                                </div>
-                                <p class="text-[11px] text-slate-400">Xác suất bạo lực thị giác cao nhất giữa các phân đoạn 3 giây:</p>
+                        <!-- Metric 2: Rủi ro Thị giác -->
+                        <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:9px; padding:16px;">
+                            <div
+                                style="font-size:11px; font-weight:600; color:#64748B; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:10px;">
+                                Rủi ro Thị giác
                             </div>
-                            <div class="mt-4">
-                                <div class="flex items-center justify-between text-xs font-mono mb-1.5">
-                                    <span class="text-slate-400">Rủi ro Hình ảnh:</span>
-                                    <span id="pVisualValue" class="text-sm font-bold text-slate-200">0%</span>
-                                </div>
-                                <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
-                                    <div id="pVisualBar" class="h-full bg-cyan-500 transition-all duration-500" style="width: 0%"></div>
-                                </div>
+                            <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
+                                <span id="kpiVisualScore"
+                                    style="font-size:28px; font-weight:800; color:#CBD5E1; line-height:1; font-family:monospace;">--%</span>
+                                <span style="font-size:13px; color:#94A3B8; margin-bottom:3px;"
+                                    id="kpiVisualUnit"></span>
+                                <span id="kpiVisualWaitBadge"
+                                    style="font-size:10.5px; background:#F1F5F9; color:#94A3B8; border:1px solid #E2E8F0; border-radius:5px; padding:2px 7px; font-weight:500;">Chờ
+                                    phân tích</span>
                             </div>
+                            <div style="background:#E2E8F0; border-radius:4px; height:6px; overflow:hidden;">
+                                <div id="kpiVisualBar" class="progress-bar"
+                                    style="height:100%; width:0%; background:#F43F5E; border-radius:4px;"></div>
+                            </div>
+                            <div id="kpiVisualLabel" style="font-size:11px; color:#94A3B8; margin-top:6px;">Bạo lực, ẩu
+                                đả, nội dung hình ảnh</div>
                         </div>
 
-                        <!-- Output Luồng 2: vihsd.pkl -->
-                        <div class="md:col-span-4 bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-col justify-between">
-                            <div>
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-xs font-bold text-purple-400">Luồng Ngôn ngữ </span>
-                                    <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/10 text-purple-300">P_text</span>
-                                </div>
-                                <p class="text-[11px] text-slate-400">Xác suất ngôn từ thù ghét / độc hại tiếng Việt:</p>
+                        <!-- Metric 3: Rủi ro Ngôn từ -->
+                        <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:9px; padding:16px;">
+                            <div
+                                style="font-size:11px; font-weight:600; color:#64748B; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:10px;">
+                                Rủi ro Ngôn từ
                             </div>
-                            <div class="mt-4">
-                                <div class="flex items-center justify-between text-xs font-mono mb-1.5">
-                                    <span class="text-slate-400">Rủi ro Ngôn từ:</span>
-                                    <span id="pTextValue" class="text-sm font-bold text-slate-200">0%</span>
-                                </div>
-                                <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
-                                    <div id="pTextBar" class="h-full bg-purple-500 transition-all duration-500" style="width: 0%"></div>
-                                </div>
+                            <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
+                                <span id="kpiTextScore"
+                                    style="font-size:28px; font-weight:800; color:#CBD5E1; line-height:1; font-family:monospace;">--%</span>
+                                <span style="font-size:13px; color:#94A3B8; margin-bottom:3px;" id="kpiTextUnit"></span>
+                                <span id="kpiTextWaitBadge"
+                                    style="font-size:10.5px; background:#F1F5F9; color:#94A3B8; border:1px solid #E2E8F0; border-radius:5px; padding:2px 7px; font-weight:500;">Chờ
+                                    phân tích</span>
                             </div>
+                            <div style="background:#E2E8F0; border-radius:4px; height:6px; overflow:hidden;">
+                                <div id="kpiTextBar" class="progress-bar"
+                                    style="height:100%; width:0%; background:#8B5CF6; border-radius:4px;"></div>
+                            </div>
+                            <div id="kpiTextLabel" style="font-size:11px; color:#94A3B8; margin-top:6px;">Ngôn từ thù
+                                địch, đe dọa, OCR</div>
                         </div>
                     </div>
                 </section>
 
-                <!-- 2. TRÌNH PHÁT VIDEO NGƯỜI DÙNG TẢI LÊN & TIMELINE 3 GIÂY -->
-                <section class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
-                    <div class="flex items-center justify-between">
-                        <h2 class="text-sm font-bold uppercase tracking-wider text-slate-200">
-                            Trình phát Video &amp; Timeline Phân đoạn 3 Giây
-                        </h2>
-                        <span id="segmentCountLabel" class="text-xs font-mono text-slate-400">0 phân đoạn</span>
+                <!-- Video Viewport + Inspector -->
+                <section class="card" style="padding:20px;">
+                    <div
+                        style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
+                        <div>
+                            <h2 style="font-size:13.5px; font-weight:700; color:#0F172A;">Trình phát Video &amp;
+                                Inspector phân đoạn</h2>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:14px; font-size:11.5px; color:#64748B;">
+                            <span style="display:flex; align-items:center; gap:5px;"><span
+                                    style="width:8px; height:8px; border-radius:50%; background:#10B981; display:inline-block;"></span>An
+                                toàn</span>
+                            <span style="display:flex; align-items:center; gap:5px;"><span
+                                    style="width:8px; height:8px; border-radius:50%; background:#F43F5E; display:inline-block;"></span>Bạo
+                                lực</span>
+                            <span style="display:flex; align-items:center; gap:5px;"><span
+                                    style="width:8px; height:8px; border-radius:50%; background:#8B5CF6; display:inline-block;"></span>Ngôn
+                                từ</span>
+                            <span id="segmentCountLabel" style="color:#94A3B8;">0 phân đoạn</span>
+                        </div>
                     </div>
 
-                    <!-- Khung chứa Video (Mặc định trống cho đến khi người dùng tải video lên) -->
-                    <div class="relative w-full aspect-video max-h-[380px] bg-slate-950 rounded-xl overflow-hidden border border-slate-800 flex items-center justify-center">
-                        <!-- Trạng thái trống khi chưa chọn video -->
-                        <div id="emptyVideoPlaceholder" class="text-center p-6 text-slate-500 space-y-2">
-                            <i class="fa-solid fa-video-slash text-3xl text-slate-600"></i>
-                            <p class="text-xs font-medium text-slate-400">Chưa có video nào được tải lên</p>
-                            <p class="text-[11px] text-slate-500">Hãy chọn file video ở cột bên trái để hiển thị và kiểm duyệt</p>
+                    <div style="display:grid; grid-template-columns:1fr 280px; gap:16px; align-items:start;">
+
+                        <!-- Video Player 16:9 -->
+                        <div style="display:flex; flex-direction:column; gap:12px;">
+                            <div
+                                style="position:relative; width:100%; aspect-ratio:16/9; background:#F1F5F9; border-radius:9px; overflow:hidden; border:1px solid #E2E8F0; display:flex; align-items:center; justify-content:center;">
+                                <!-- Empty state -->
+                                <div id="emptyVideoPlaceholder" style="text-align:center; padding:24px;">
+                                    <i class="fa-solid fa-video-slash" style="font-size:28px; color:#CBD5E1;"></i>
+                                    <p style="font-size:12px; color:#94A3B8; margin-top:10px; font-weight:500;">Chưa có
+                                        video được tải lên</p>
+                                    <p style="font-size:11px; color:#CBD5E1; margin-top:4px;">Chọn file video ở cột bên
+                                        trái và bấm "Chạy lại phân tích"</p>
+                                </div>
+
+                                <!-- Video element -->
+                                <video id="userVideoPlayer"
+                                    style="width:100%; height:100%; object-fit:contain; display:none;" controls
+                                    playsinline></video>
+
+                                <!-- Sensitive overlay -->
+                                <div id="sensitiveOverlay" style="display:none;">
+                                    <div style="text-align:center; padding:16px;">
+                                        <div
+                                            style="width:48px; height:48px; background:rgba(244,63,94,0.15); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 10px;">
+                                            <i class="fa-solid fa-eye-slash" style="color:#F43F5E; font-size:20px;"></i>
+                                        </div>
+                                        <p style="color:#fff; font-size:13px; font-weight:600; margin-bottom:4px;">Khung
+                                            hình nhạy cảm bị che mờ</p>
+                                        <p style="color:rgba(255,255,255,0.65); font-size:11px; margin-bottom:14px;">
+                                            Phát hiện nội dung bạo lực trong phân đoạn này</p>
+                                        <button onclick="toggleOverlay()"
+                                            style="background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); color:#fff; border-radius:7px; padding:7px 16px; font-size:12px; cursor:pointer; font-weight:500; backdrop-filter:blur(4px);">
+                                            <i class="fa-solid fa-eye" style="margin-right:5px;"></i>Hiện khung hình gốc
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Timeline segments mini -->
+                            <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:9px; padding:14px;">
+                                <div style="font-size:12px; font-weight:600; color:#334155; margin-bottom:10px;">Phân
+                                    đoạn theo thời gian (bấm để tua)</div>
+                                <div id="timelineContainer"
+                                    style="display:grid; grid-template-columns:repeat(auto-fill, minmax(72px, 1fr)); gap:6px;">
+                                    <div
+                                        style="grid-column:1/-1; text-align:center; font-size:11.5px; color:#94A3B8; padding:10px 0;">
+                                        Chưa có dữ liệu. Vui lòng chọn video và bấm "Chạy lại phân tích".
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <!-- Trình phát Video thật của người dùng -->
-                        <video id="userVideoPlayer" class="w-full h-full object-contain hidden" controls playsinline></video>
-                    </div>
+                        <!-- Inspector Card -->
+                        <div id="inspectorCard"
+                            style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:9px; padding:16px; display:flex; flex-direction:column; gap:14px;">
+                            <div
+                                style="font-size:12px; font-weight:700; color:#0F172A; display:flex; align-items:center; gap:7px;">
+                                <i class="fa-solid fa-magnifying-glass-chart"
+                                    style="color:#2563EB; font-size:12px;"></i>
+                                Chi tiết phân đoạn
+                            </div>
 
-                    <!-- Thanh Timeline các phân đoạn 3 giây do predict.py trả về -->
-                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5">
-                        <div class="text-xs font-semibold text-slate-300 mb-2">
-                            Các phân đoạn 3 giây từ <span class="font-mono text-cyan-400">predict.py</span> (Bấm vào phân đoạn để tua video tới vị trí đó):
-                        </div>
-                        <div id="timelineContainer" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                            <div class="col-span-full py-3 text-center text-xs font-mono text-slate-500">
-                                Chưa có dữ liệu phân đoạn. Vui lòng tải video lên để phân tích.
+                            <!-- Empty inspector -->
+                            <div id="inspectorEmpty" style="text-align:center; padding:20px 10px; color:#CBD5E1;">
+                                <i class="fa-solid fa-cursor" style="font-size:22px; margin-bottom:8px;"></i>
+                                <p style="font-size:11.5px; color:#94A3B8;">Bấm vào một dòng trong bảng hoặc một phân
+                                    đoạn trên timeline để xem chi tiết</p>
+                            </div>
+
+                            <!-- Inspector content (shown when segment selected) -->
+                            <div id="inspectorContent" style="display:none; flex-direction:column; gap:12px;">
+                                <div>
+                                    <div
+                                        style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:#94A3B8; margin-bottom:3px;">
+                                        Mốc thời gian</div>
+                                    <div id="inspectorTime"
+                                        style="font-size:14px; font-weight:700; color:#0F172A; font-variant-numeric:tabular-nums;">
+                                    </div>
+                                </div>
+                                <div>
+                                    <div
+                                        style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:#94A3B8; margin-bottom:5px;">
+                                        Nhãn vi phạm</div>
+                                    <div id="inspectorBadge"></div>
+                                </div>
+                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                                    <div
+                                        style="background:#fff; border:1px solid #E2E8F0; border-radius:7px; padding:10px;">
+                                        <div style="font-size:10px; font-weight:600; color:#94A3B8; margin-bottom:4px;">
+                                            THỰC GIÁC</div>
+                                        <div id="inspectorVisual"
+                                            style="font-size:17px; font-weight:700; color:#F43F5E;"></div>
+                                        <div
+                                            style="background:#E2E8F0; border-radius:3px; height:4px; margin-top:5px; overflow:hidden;">
+                                            <div id="inspectorVisualBar" class="progress-bar"
+                                                style="height:100%; width:0%; background:#F43F5E; border-radius:3px;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div
+                                        style="background:#fff; border:1px solid #E2E8F0; border-radius:7px; padding:10px;">
+                                        <div style="font-size:10px; font-weight:600; color:#94A3B8; margin-bottom:4px;">
+                                            NGÔN TỪ</div>
+                                        <div id="inspectorText" style="font-size:17px; font-weight:700; color:#8B5CF6;">
+                                        </div>
+                                        <div
+                                            style="background:#E2E8F0; border-radius:3px; height:4px; margin-top:5px; overflow:hidden;">
+                                            <div id="inspectorTextBar" class="progress-bar"
+                                                style="height:100%; width:0%; background:#8B5CF6; border-radius:3px;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div
+                                        style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:#94A3B8; margin-bottom:5px;">
+                                        Phụ đề OCR trích xuất</div>
+                                    <div id="inspectorNote"
+                                        style="font-size:12px; color:#334155; background:#fff; border:1px solid #E2E8F0; border-radius:7px; padding:9px 11px; min-height:38px; line-height:1.6;">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -248,25 +617,54 @@
             </div>
         </div>
 
-        <!-- ==================== BẢNG CHI TIẾT TỪNG PHÂN ĐOẠN (AUDIT LOG) ==================== -->
-        <section class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-3">
-            <h2 class="text-sm font-bold uppercase tracking-wider text-slate-200">
-                Bảng Chi tiết Kết quả Kiểm duyệt từng Phân đoạn (Output Segments)
-            </h2>
-            <div class="overflow-x-auto rounded-xl border border-slate-800">
-                <table class="w-full text-left border-collapse">
+        <!-- ==================== BẢNG ĐỐI SOÁT CHI TIẾT ==================== -->
+        <section class="card" style="padding:20px;">
+            <div
+                style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
+                <div>
+                    <h2 style="font-size:13.5px; font-weight:700; color:#0F172A;">Bảng đối soát chi tiết từng phân đoạn
+                    </h2>
+                    <p style="font-size:11.5px; color:#94A3B8; margin-top:2px;">Bấm vào dòng bất kỳ để xem chi tiết
+                        trong Inspector và tua video tới phân đoạn đó</p>
+                </div>
+                <div id="tableViolationSummary"
+                    style="font-size:12px; color:#64748B; display:flex; align-items:center; gap:10px;"></div>
+            </div>
+
+            <div style="overflow-x:auto; border:1px solid #E2E8F0; border-radius:9px;">
+                <table style="width:100%; border-collapse:collapse; font-size:12.5px;">
                     <thead>
-                        <tr class="bg-slate-950 text-slate-400 text-[11px] font-bold uppercase border-b border-slate-800">
-                            <th class="py-3 px-4">Mốc thời gian</th>
-                            <th class="py-3 px-4">Trạng thái phân đoạn</th>
-                            <th class="py-3 px-4">Ghi chú từ predict.py</th>
-                            <th class="py-3 px-4 text-right">Xác suất bạo lực (Risk %)</th>
+                        <tr style="background:#F8FAFC; border-bottom:1px solid #E2E8F0;">
+                            <th
+                                style="padding:11px 16px; text-align:left; font-size:11px; font-weight:700; color:#64748B; text-transform:uppercase; letter-spacing:0.06em; white-space:nowrap;">
+                                Mốc thời gian</th>
+                            <th
+                                style="padding:11px 16px; text-align:left; font-size:11px; font-weight:700; color:#64748B; text-transform:uppercase; letter-spacing:0.06em; white-space:nowrap;">
+                                Phụ đề OCR / Giọng nói</th>
+                            <th
+                                style="padding:11px 16px; text-align:center; font-size:11px; font-weight:700; color:#64748B; text-transform:uppercase; letter-spacing:0.06em; white-space:nowrap;">
+                                Thị giác</th>
+                            <th
+                                style="padding:11px 16px; text-align:center; font-size:11px; font-weight:700; color:#64748B; text-transform:uppercase; letter-spacing:0.06em; white-space:nowrap;">
+                                Ngôn từ</th>
+                            <th
+                                style="padding:11px 16px; text-align:center; font-size:11px; font-weight:700; color:#64748B; text-transform:uppercase; letter-spacing:0.06em; white-space:nowrap;">
+                                Rủi ro tổng</th>
+                            <th
+                                style="padding:11px 16px; text-align:left; font-size:11px; font-weight:700; color:#64748B; text-transform:uppercase; letter-spacing:0.06em; white-space:nowrap;">
+                                Kết luận vi phạm</th>
+                            <th
+                                style="padding:11px 16px; text-align:center; font-size:11px; font-weight:700; color:#64748B; text-transform:uppercase; letter-spacing:0.06em; white-space:nowrap;">
+                                Chi tiết</th>
                         </tr>
                     </thead>
-                    <tbody id="segmentsTableBody" class="divide-y divide-slate-800 text-xs bg-slate-950/40">
+                    <tbody id="segmentsTableBody" style="color:#334155;">
                         <tr>
-                            <td colspan="4" class="py-8 text-center text-slate-500 font-mono">
-                                Chưa có dữ liệu kiểm duyệt.
+                            <td colspan="7"
+                                style="padding:40px 16px; text-align:center; color:#94A3B8; font-size:12.5px;">
+                                <i class="fa-solid fa-table"
+                                    style="font-size:20px; color:#E2E8F0; display:block; margin-bottom:8px;"></i>
+                                Chưa có dữ liệu kiểm duyệt. Hãy chọn video / nhập caption và bấm "Chạy lại phân tích".
                             </td>
                         </tr>
                     </tbody>
@@ -276,205 +674,618 @@
 
     </main>
 
-    <!-- ==================== JAVASCRIPT KẾT NỐI TRỰC TIẾP PREDICT.PY ==================== -->
+    <!-- ==================== JAVASCRIPT ==================== -->
     <script>
-        const API_URL = "http://127.0.0.1:8000/api/moderate";
+        // ===== CONFIG =====
+        const API_URL = (window.location.origin && window.location.origin.startsWith("http"))
+            ? `${window.location.origin}/api/moderate`
+            : "http://127.0.0.1:8000/api/moderate";
+
         let selectedVideoFile = null;
         let currentSegments = [];
+        let activeSegmentIdx = -1;
+        let overlayVisible = true;
+        let hasAnalyzed = false; // flag: đã phân tích lần đầu chưa
 
+        // ===== DOM REFS =====
         const videoInput = document.getElementById('videoInput');
         const userVideoPlayer = document.getElementById('userVideoPlayer');
-        const emptyVideoPlaceholder = document.getElementById('emptyVideoPlaceholder');
+        const emptyPlaceholder = document.getElementById('emptyVideoPlaceholder');
+        const dropZone = document.getElementById('dropZone');
+        const captionInput = document.getElementById('captionInput');
 
-        // 1. Khi người dùng chọn file video -> Hiển thị lên trình phát và tự động gọi predict.py
-        videoInput.addEventListener('change', (e) => {
-            if (e.target.files && e.target.files[0]) {
-                handleVideoSelected(e.target.files[0]);
-            }
+        // ===== CHARACTER COUNTER =====
+        captionInput.addEventListener('input', () => {
+            const len = captionInput.value.length;
+            document.getElementById('charCounter').textContent = `${len} ký tự`;
+        });
+
+        // ===== DROP ZONE =====
+        videoInput.addEventListener('change', e => {
+            if (e.target.files && e.target.files[0]) handleVideoSelected(e.target.files[0]);
+        });
+        ['dragenter', 'dragover'].forEach(ev => dropZone.addEventListener(ev, e => {
+            e.preventDefault(); e.stopPropagation();
+            dropZone.classList.add('drag-over');
+        }));
+        ['dragleave', 'drop'].forEach(ev => dropZone.addEventListener(ev, e => {
+            e.preventDefault(); e.stopPropagation();
+            dropZone.classList.remove('drag-over');
+        }));
+        dropZone.addEventListener('drop', e => {
+            if (e.dataTransfer && e.dataTransfer.files[0]) handleVideoSelected(e.dataTransfer.files[0]);
         });
 
         function handleVideoSelected(file) {
             selectedVideoFile = file;
+            const mb = (file.size / (1024 * 1024)).toFixed(2);
+            const display = document.getElementById('fileNameDisplay');
+            const size = document.getElementById('fileSizeDisplay');
+            const clearBtn = document.getElementById('clearVideoBtn');
 
-            // Hiển thị thông tin file
-            document.getElementById('fileNameDisplay').textContent = file.name;
-            document.getElementById('fileSizeDisplay').textContent = `${(file.size / (1024 * 1024)).toFixed(2)} MB`;
+            display.textContent = file.name;
+            display.style.color = '#2563EB';
+            size.textContent = `${mb} MB`;
+            clearBtn.style.display = 'flex';
 
-            // Đưa video người dùng vừa chọn vào thẻ <video>
-            const fileURL = URL.createObjectURL(file);
-            emptyVideoPlaceholder.classList.add('hidden');
-            userVideoPlayer.classList.remove('hidden');
-            userVideoPlayer.src = fileURL;
+            const url = URL.createObjectURL(file);
+            emptyPlaceholder.style.display = 'none';
+            userVideoPlayer.style.display = 'block';
+            userVideoPlayer.src = url;
+            document.getElementById('sensitiveOverlay').style.display = 'none';
 
-            // Tự động gọi sang predict.py ngay sau khi tải video lên
-            sendToPredict();
+            setServerStatus('indigo', 'Đã tải video – sẵn sàng phân tích');
         }
 
-        // 2. Hàm gửi Video + Caption sang server.py -> chạy predict.py và nhận Output
-        async function sendToPredict() {
-            const captionText = document.getElementById('captionInput').value.trim();
+        function clearSelectedVideo(e) {
+            if (e) { e.preventDefault(); e.stopPropagation(); }
+            selectedVideoFile = null;
+            videoInput.value = "";
 
-            if (!selectedVideoFile && !captionText) {
-                alert("Vui lòng chọn một file Video hoặc nhập Caption để kiểm duyệt!");
-                return;
-            }
+            const display = document.getElementById('fileNameDisplay');
+            const size = document.getElementById('fileSizeDisplay');
+            const clearBtn = document.getElementById('clearVideoBtn');
+            display.textContent = 'Bấm hoặc kéo thả file vào đây';
+            display.style.color = '#334155';
+            size.textContent = 'Chưa có file nào được chọn';
+            clearBtn.style.display = 'none';
 
-            const btn = document.getElementById('predictBtn');
-            const loadingBox = document.getElementById('loadingBox');
-            const statusDot = document.getElementById('statusDot');
-            const statusText = document.getElementById('statusText');
+            userVideoPlayer.pause();
+            userVideoPlayer.removeAttribute('src');
+            userVideoPlayer.load();
+            userVideoPlayer.style.display = 'none';
+            emptyPlaceholder.style.display = 'block';
+            document.getElementById('sensitiveOverlay').style.display = 'none';
 
-            btn.disabled = true;
-            btn.classList.add('opacity-60');
-            loadingBox.classList.remove('hidden');
-            statusDot.className = "w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping";
-            statusText.textContent = "Đang xử lý tại predict.py...";
-
-            try {
-                const formData = new FormData();
-                if (selectedVideoFile) {
-                    formData.append("video", selectedVideoFile);
-                }
-                formData.append("caption", captionText);
-
-                const response = await fetch(API_URL, {
-                    method: "POST",
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Lỗi Server (${response.status})`);
-                }
-
-                const result = await response.json();
-                renderPredictOutput(result);
-
-                statusDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400";
-                statusText.textContent = "Đã nhận Output từ predict.py";
-
-            } catch (err) {
-                console.error(err);
-                statusDot.className = "w-2.5 h-2.5 rounded-full bg-rose-500";
-                statusText.textContent = "Lỗi kết nối server.py (Hãy bật uvicorn)";
-                alert("Không kết nối được với server.py! Bạn hãy kiểm tra xem đã chạy lệnh 'python -m uvicorn server:app --reload' trong Terminal chưa nhé.");
-            } finally {
-                btn.disabled = false;
-                btn.classList.remove('opacity-60');
-                loadingBox.classList.add('hidden');
-            }
+            currentSegments = [];
+            activeSegmentIdx = -1;
+            hasAnalyzed = false; // reset flag khi xóa video
+            // Reset nút về trạng thái ban đầu
+            document.getElementById('predictBtnIcon').className = 'fa-solid fa-magnifying-glass';
+            document.getElementById('predictBtnText').textContent = 'Phân tích';
+            resetDashboard();
         }
 
-        // 3. Hiển thị trực tiếp Output của predict.py lên giao diện HTML
+        // ===== OVERLAY TOGGLE =====
+        function toggleOverlay() {
+            overlayVisible = !overlayVisible;
+            document.getElementById('sensitiveOverlay').style.display = overlayVisible ? 'flex' : 'none';
+        }
+
+        // ===== SERVER STATUS =====
+        const statusColors = {
+            gray: '#CBD5E1', indigo: '#818CF8',
+            green: '#10B981', red: '#F43F5E', amber: '#F59E0B'
+        };
+        function setServerStatus(color, text) {
+            document.getElementById('statusDot').style.background = statusColors[color] || statusColors.gray;
+            document.getElementById('statusText').textContent = text;
+        }
+
+        // ===== RESET =====
+        function resetDashboard() {
+            // KPI scores — hiển thị --% màu xám + badge "Chờ phân tích"
+            const kpiResetStyle = 'font-size:28px; font-weight:800; color:#CBD5E1; line-height:1; font-family:monospace;';
+            ['kpiSafetyScore', 'kpiVisualScore', 'kpiTextScore'].forEach(id => {
+                const el = document.getElementById(id);
+                el.textContent = '--%';
+                el.setAttribute('style', kpiResetStyle);
+            });
+            ['kpiSafetyUnit', 'kpiVisualUnit', 'kpiTextUnit'].forEach(id => {
+                document.getElementById(id).textContent = '';
+            });
+            ['kpiSafetyBar', 'kpiVisualBar', 'kpiTextBar'].forEach(id => {
+                document.getElementById(id).style.width = '0%';
+            });
+            // Hiện badge "Chờ phân tích" cho cả 3 card
+            ['kpiSafetyWaitBadge', 'kpiVisualWaitBadge', 'kpiTextWaitBadge'].forEach(id => {
+                document.getElementById(id).style.display = 'inline-block';
+            });
+            document.getElementById('kpiSafetyLabel').textContent = 'Chờ dữ liệu phân tích';
+            document.getElementById('kpiVisualLabel').textContent = 'Bạo lực, ẩu đả, nội dung hình ảnh';
+            document.getElementById('kpiTextLabel').textContent = 'Ngôn từ thù địch, đe dọa, OCR';
+
+            // Badge
+            const badge = document.getElementById('statusBadge');
+            badge.className = 'kpi-badge-idle';
+            badge.style.cssText += ';padding:7px 16px;border-radius:8px;font-size:12.5px;font-weight:700;letter-spacing:0.03em;display:flex;align-items:center;gap:7px;';
+            document.getElementById('statusBadgeDot').style.background = '#94A3B8';
+            document.getElementById('statusBadgeText').textContent = 'Chưa phân tích';
+
+            // Timeline & Table
+            document.getElementById('segmentCountLabel').textContent = '0 phân đoạn';
+            resetTimeline();
+            resetTable();
+
+            // Inspector
+            showInspectorEmpty();
+
+            // Subtitles
+            document.getElementById('ocrCountBadge').textContent = '0 đoạn';
+            document.getElementById('detectedSubtitlesOutput').textContent = 'Chưa quét phụ đề trong video...';
+
+            // Server status
+            setServerStatus('gray', 'Chờ tải video...');
+        }
+
+        function resetTimeline() {
+            document.getElementById('timelineContainer').innerHTML = `
+                <div style="grid-column:1/-1; text-align:center; font-size:11.5px; color:#94A3B8; padding:10px 0;">
+                    Chưa có dữ liệu. Vui lòng chọn video và bấm "Chạy lại phân tích".
+                </div>`;
+        }
+        function resetTable() {
+            document.getElementById('segmentsTableBody').innerHTML = `
+                <tr>
+                    <td colspan="7" style="padding:40px 16px; text-align:center; color:#94A3B8; font-size:12.5px;">
+                        <i class="fa-solid fa-table" style="font-size:20px; color:#E2E8F0; display:block; margin-bottom:8px;"></i>
+                        Chưa có dữ liệu kiểm duyệt. Hãy chọn video / nhập caption và bấm "Chạy lại phân tích".
+                    </td>
+                </tr>`;
+            document.getElementById('tableViolationSummary').innerHTML = '';
+        }
+
+        // ===== INSPECTOR =====
+        function showInspectorEmpty() {
+            document.getElementById('inspectorEmpty').style.display = 'block';
+            document.getElementById('inspectorContent').style.display = 'none';
+        }
+        function showInspectorContent(seg) {
+            const pVis = seg.p_visual_seg ?? seg.risk ?? 0;
+            const pTxt = seg.p_text_seg ?? 0;
+            const segType = seg.type || (seg.risk >= 50 ? 'VISION_VIOLENCE' : 'SAFE');
+
+            document.getElementById('inspectorEmpty').style.display = 'none';
+            const content = document.getElementById('inspectorContent');
+            content.style.display = 'flex';
+
+            document.getElementById('inspectorTime').textContent = seg.time_label || '—';
+
+            // Badge
+            const badgeEl = document.getElementById('inspectorBadge');
+            const badgeMap = {
+                'BOTH_VIOLATION': { text: 'Vi phạm Hình ảnh & Chữ', cls: 'kpi-badge-danger' },
+                'VISION_VIOLENCE': { text: 'Bạo lực Hình ảnh', cls: 'kpi-badge-danger' },
+                'TEXT_VIOLATION': { text: 'Ngôn từ Độc hại', cls: 'kpi-badge-warn' },
+                'SAFE': { text: 'An toàn', cls: 'kpi-badge-safe' },
+            };
+            const bInfo = badgeMap[segType] || badgeMap['SAFE'];
+            badgeEl.innerHTML = `<span class="${bInfo.cls}" style="display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border-radius:7px; font-size:12px; font-weight:600;">
+                ${bInfo.text}
+            </span>`;
+
+            // Scores
+            document.getElementById('inspectorVisual').textContent = `${pVis}%`;
+            document.getElementById('inspectorVisualBar').style.width = `${Math.min(100, pVis)}%`;
+            document.getElementById('inspectorText').textContent = `${pTxt}%`;
+            document.getElementById('inspectorTextBar').style.width = `${Math.min(100, pTxt)}%`;
+
+            // Note
+            document.getElementById('inspectorNote').textContent = seg.note || '(Không có phụ đề)';
+        }
+
+        // ===== SEEK TO SEGMENT =====
+        function seekToSegment(idx) {
+            const seg = currentSegments[idx];
+            if (!seg) return;
+            activeSegmentIdx = idx;
+
+            // Cập nhật active state timeline buttons
+            currentSegments.forEach((_, i) => {
+                const btn = document.getElementById(`segBtn-${i}`);
+                if (btn) {
+                    if (i === idx) btn.classList.add('seg-btn-active');
+                    else btn.classList.remove('seg-btn-active');
+                }
+            });
+
+            // Cập nhật active state table rows
+            const rows = document.querySelectorAll('#segmentsTableBody tr[data-idx]');
+            rows.forEach(row => {
+                if (parseInt(row.dataset.idx) === idx) row.classList.add('row-active');
+                else row.classList.remove('row-active');
+            });
+
+            // Video seek
+            if (userVideoPlayer && userVideoPlayer.readyState >= 1) {
+                userVideoPlayer.currentTime = seg.start;
+                userVideoPlayer.play().catch(() => { });
+            }
+
+            // Overlay nếu có bạo lực
+            const pVis = seg.p_visual_seg ?? seg.risk ?? 0;
+            const segType = seg.type || (seg.risk >= 50 ? 'VISION_VIOLENCE' : 'SAFE');
+            const hasViolence = pVis >= 50 || segType === 'VISION_VIOLENCE' || segType === 'BOTH_VIOLATION';
+            const overlay = document.getElementById('sensitiveOverlay');
+            if (hasViolence && userVideoPlayer.style.display !== 'none') {
+                overlayVisible = true;
+                overlay.style.display = 'flex';
+            } else {
+                overlay.style.display = 'none';
+            }
+
+            // Inspector
+            showInspectorContent(seg);
+        }
+
+        // ===== RENDER OUTPUT =====
         function renderPredictOutput(data) {
             const score = data.safety_score ?? 0;
             const pVis = data.p_visual ?? 0;
             const pTxt = data.p_text ?? 0;
 
-            // Cập nhật Đồng hồ Brand Safety Score
-            const circumference = 314.16;
-            const offset = circumference - (score / 100) * circumference;
-            const gaugeArc = document.getElementById('gaugeArc');
-            gaugeArc.style.strokeDashoffset = offset;
+            // Ẩn badge "Chờ phân tích" và đổi màu chữ về đen khi có dữ liệu thật
+            const kpiActiveStyle = 'font-size:28px; font-weight:800; color:#0F172A; line-height:1; font-family:monospace;';
+            ['kpiSafetyScore', 'kpiVisualScore', 'kpiTextScore'].forEach(id => {
+                document.getElementById(id).setAttribute('style', kpiActiveStyle);
+            });
+            ['kpiSafetyWaitBadge', 'kpiVisualWaitBadge', 'kpiTextWaitBadge'].forEach(id => {
+                document.getElementById(id).style.display = 'none';
+            });
 
-            document.getElementById('scoreValue').textContent = `${score}%`;
-            document.getElementById('levelLabel').textContent = data.level_label || data.status;
+            // KPI Safety Score
+            document.getElementById('kpiSafetyScore').textContent = score;
+            document.getElementById('kpiSafetyUnit').textContent = '%';
+            document.getElementById('kpiSafetyBar').style.width = `${Math.min(100, score)}%`;
 
-            const statusBadge = document.getElementById('statusBadge');
+            // KPI Visual
+            document.getElementById('kpiVisualScore').textContent = pVis;
+            document.getElementById('kpiVisualUnit').textContent = '%';
+            document.getElementById('kpiVisualBar').style.width = `${Math.min(100, pVis)}%`;
+
+            // KPI Text
+            document.getElementById('kpiTextScore').textContent = pTxt;
+            document.getElementById('kpiTextUnit').textContent = '%';
+            document.getElementById('kpiTextBar').style.width = `${Math.min(100, pTxt)}%`;
+
+            // Màu KPI bars theo ngưỡng
+            document.getElementById('kpiSafetyBar').style.background = score >= 80 ? '#10B981' : score >= 50 ? '#F59E0B' : '#F43F5E';
+
+            // Status badge + labels
+            const badge = document.getElementById('statusBadge');
+            const badgeDot = document.getElementById('statusBadgeDot');
+            const badgeTxt = document.getElementById('statusBadgeText');
+            const baseStyle = 'padding:7px 16px;border-radius:8px;font-size:12.5px;font-weight:700;letter-spacing:0.03em;display:flex;align-items:center;gap:7px;border:1.5px solid;';
+
             if (score >= 80) {
-                gaugeArc.setAttribute('stroke', '#10b981');
-                statusBadge.className = "px-3 py-1 rounded-full text-xs font-bold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
-                statusBadge.textContent = data.level_label || "AN TOÀN";
+                badge.className = 'kpi-badge-safe';
+                badge.setAttribute('style', baseStyle);
+                badgeDot.style.background = '#10B981';
+                badgeTxt.textContent = '● AN TOÀN – Nội dung đạt chuẩn';
+                document.getElementById('kpiSafetyLabel').textContent = 'Nội dung an toàn thương hiệu';
             } else if (score >= 50) {
-                gaugeArc.setAttribute('stroke', '#f59e0b');
-                statusBadge.className = "px-3 py-1 rounded-full text-xs font-bold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40";
-                statusBadge.textContent = data.level_label || "CẢNH BÁO";
+                badge.className = 'kpi-badge-warn';
+                badge.setAttribute('style', baseStyle);
+                badgeDot.style.background = '#F59E0B';
+                badgeTxt.textContent = '● CẢNH BÁO – Cần xem xét thủ công';
+                document.getElementById('kpiSafetyLabel').textContent = 'Mức độ rủi ro trung bình';
             } else {
-                gaugeArc.setAttribute('stroke', '#f43f5e');
-                statusBadge.className = "px-3 py-1 rounded-full text-xs font-bold uppercase bg-rose-500/20 text-rose-300 border border-rose-500/40";
-                statusBadge.textContent = data.level_label || "VI PHẠM / NGUY HIỂM";
+                badge.className = 'kpi-badge-danger';
+                badge.setAttribute('style', baseStyle);
+                badgeDot.style.background = '#F43F5E';
+                const dominantViolation = pVis > pTxt
+                    ? 'PHÁT HIỆN BẠO LỰC THỊ GIÁC (NGUY HIỂM)'
+                    : 'PHÁT HIỆN NGÔN TỪ ĐỘC HẠI (NGUY HIỂM)';
+                badgeTxt.textContent = `● ${dominantViolation}`;
+                document.getElementById('kpiSafetyLabel').textContent = 'Mức độ rủi ro cao – Cần xử lý ngay';
             }
 
-            // Cập nhật thanh xác suất P_visual & P_text
-            document.getElementById('pVisualValue').textContent = `${pVis}%`;
-            document.getElementById('pVisualBar').style.width = `${Math.min(100, pVis)}%`;
-            document.getElementById('pVisualBar').className = `h-full transition-all duration-500 ${pVis >= 50 ? 'bg-rose-500' : 'bg-cyan-500'}`;
+            // Nhãn visual/text
+            document.getElementById('kpiVisualLabel').textContent = pVis >= 50
+                ? `Phát hiện bạo lực tại ${(data.segments || []).filter(s => (s.p_visual_seg ?? s.risk ?? 0) >= 50).length} phân đoạn`
+                : 'Không phát hiện bạo lực hình ảnh';
+            document.getElementById('kpiTextLabel').textContent = pTxt >= 50
+                ? 'Phát hiện ngôn từ độc hại / đe dọa'
+                : 'Không phát hiện ngôn từ vi phạm';
 
-            document.getElementById('pTextValue').textContent = `${pTxt}%`;
-            document.getElementById('pTextBar').style.width = `${Math.min(100, pTxt)}%`;
-            document.getElementById('pTextBar').className = `h-full transition-all duration-500 ${pTxt >= 50 ? 'bg-rose-500' : 'bg-purple-500'}`;
+            // OCR Subtitles
+            const subs = data.detected_subtitles || [];
+            document.getElementById('ocrCountBadge').textContent = `${subs.length} đoạn có chữ`;
+            const subsEl = document.getElementById('detectedSubtitlesOutput');
+            if (subs.length > 0) {
+                subsEl.innerHTML = subs.map(line => `<div style="border-bottom:1px solid #F1F5F9; padding:2px 0; color:#2563EB; font-size:11.5px;">${line}</div>`).join('');
+            } else {
+                subsEl.textContent = 'Không phát hiện phụ đề/chữ trên các khung hình.';
+            }
 
-            // Cập nhật kết quả tách từ PyVi
-            document.getElementById('tokenizedOutput').textContent = data.tokenized_caption || "Không có văn bản đầu vào";
-
-            // Cập nhật danh sách phân đoạn 3 giây (segments) từ predict.py
+            // Segments
             currentSegments = data.segments || [];
-            document.getElementById('segmentCountLabel').textContent = `${currentSegments.length} phân đoạn (3s/đoạn)`;
+            document.getElementById('segmentCountLabel').textContent = `${currentSegments.length} phân đoạn`;
+            activeSegmentIdx = -1;
 
-            const timelineContainer = document.getElementById('timelineContainer');
-            const tableBody = document.getElementById('segmentsTableBody');
+            renderTimeline();
+            renderTable();
 
+            // Violation summary
+            const violations = currentSegments.filter(s => (s.type || '') !== 'SAFE' || (s.risk || 0) >= 50).length;
+            document.getElementById('tableViolationSummary').innerHTML = violations > 0
+                ? `<span style="background:#FFF1F2; color:#BE123C; border:1px solid #FECDD3; border-radius:6px; padding:3px 10px; font-size:11.5px; font-weight:600;">${violations} phân đoạn vi phạm</span>`
+                : `<span style="background:#F0FDF4; color:#15803D; border:1px solid #BBF7D0; border-radius:6px; padding:3px 10px; font-size:11.5px; font-weight:600;">Không có vi phạm</span>`;
+        }
+
+        // ===== RENDER TIMELINE =====
+        function renderTimeline() {
+            const container = document.getElementById('timelineContainer');
             if (currentSegments.length === 0) {
-                timelineContainer.innerHTML = `<div class="col-span-full py-3 text-center text-xs font-mono text-slate-500">Không có phân đoạn video nào.</div>`;
-                tableBody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-slate-500 font-mono">Không có phân đoạn video.</td></tr>`;
+                container.innerHTML = `<div style="grid-column:1/-1; text-align:center; font-size:11.5px; color:#94A3B8; padding:10px 0;">Không có phân đoạn video.</div>`;
                 return;
             }
 
-            // Vẽ các ô Timeline 3 giây
-            timelineContainer.innerHTML = currentSegments.map((seg, idx) => {
-                const isViolent = seg.risk >= 50 || seg.type === "VISION_VIOLENCE";
-                const boxStyle = isViolent
-                    ? "bg-rose-950/80 border-rose-500 text-rose-200 hover:bg-rose-900"
-                    : "bg-emerald-950/50 border-emerald-500/40 text-emerald-200 hover:bg-emerald-900/50";
+            container.innerHTML = currentSegments.map((seg, idx) => {
+                const pVis = seg.p_visual_seg ?? seg.risk ?? 0;
+                const pTxt = seg.p_text_seg ?? 0;
+                const segType = seg.type || (seg.risk >= 50 ? 'VISION_VIOLENCE' : 'SAFE');
 
-                return `
-                    <button onclick="seekToSegment(${idx})" id="segBtn-${idx}" class="p-2.5 rounded-xl border text-left transition flex flex-col gap-1 ${boxStyle}">
-                        <div class="flex items-center justify-between font-mono text-[11px] font-bold">
-                            <span>${seg.time_label}</span>
-                            <i class="fa-solid ${isViolent ? 'fa-triangle-exclamation text-rose-400' : 'fa-check text-emerald-400'}"></i>
-                        </div>
-                        <div class="text-[10px] font-mono opacity-90">
-                            Risk: <strong>${seg.risk}%</strong>
-                        </div>
-                    </button>
-                `;
-            }).join('');
+                let bg = '#F0FDF4', borderColor = '#BBF7D0', textColor = '#15803D';
+                let icon = `<i class="fa-solid fa-check" style="font-size:10px;"></i>`;
 
-            // Vẽ bảng chi tiết từng phân đoạn
-            tableBody.innerHTML = currentSegments.map((seg, idx) => {
-                const isViolent = seg.risk >= 50 || seg.type === "VISION_VIOLENCE";
-                const badge = isViolent
-                    ? `<span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-semibold">VI PHẠM BẠO LỰC</span>`
-                    : `<span class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">AN TOÀN</span>`;
+                if (segType === 'BOTH_VIOLATION') {
+                    bg = '#FFF1F2'; borderColor = '#FECDD3'; textColor = '#BE123C';
+                    icon = `<i class="fa-solid fa-triangle-exclamation" style="font-size:10px;"></i>`;
+                } else if (segType === 'VISION_VIOLENCE') {
+                    bg = '#FFF1F2'; borderColor = '#FECDD3'; textColor = '#BE123C';
+                    icon = `<i class="fa-solid fa-eye-slash" style="font-size:10px;"></i>`;
+                } else if (segType === 'TEXT_VIOLATION') {
+                    bg = '#FAF5FF'; borderColor = '#DDD6FE'; textColor = '#6D28D9';
+                    icon = `<i class="fa-solid fa-comment-slash" style="font-size:10px;"></i>`;
+                }
 
-                return `
-                    <tr onclick="seekToSegment(${idx})" class="hover:bg-slate-800/60 cursor-pointer transition">
-                        <td class="py-3 px-4 font-mono font-bold text-cyan-400">${seg.time_label}</td>
-                        <td class="py-3 px-4">${badge}</td>
-                        <td class="py-3 px-4 text-slate-300">${seg.note}</td>
-                        <td class="py-3 px-4 text-right font-mono font-bold ${isViolent ? 'text-rose-400' : 'text-emerald-400'}">${seg.risk}%</td>
-                    </tr>
-                `;
+                return `<button onclick="seekToSegment(${idx})" id="segBtn-${idx}"
+                    style="background:${bg}; border:1.5px solid ${borderColor}; color:${textColor}; border-radius:7px; padding:7px 6px; cursor:pointer; text-align:left; display:flex; flex-direction:column; gap:3px; transition:box-shadow 0.1s;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; font-size:11px; font-weight:700;">
+                        <span>${seg.time_label}</span>
+                        ${icon}
+                    </div>
+                    <div style="font-size:10px; color:${textColor}; opacity:0.75;">${pVis}% / ${pTxt}%</div>
+                </button>`;
             }).join('');
         }
 
-        // 4. Bấm vào phân đoạn nào thì tua video của người dùng đến đúng giây đó
-        function seekToSegment(idx) {
-            const seg = currentSegments[idx];
-            if (!seg) return;
+        // ===== RENDER TABLE =====
+        function renderTable() {
+            const tbody = document.getElementById('segmentsTableBody');
+            if (currentSegments.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="padding:40px 16px; text-align:center; color:#94A3B8; font-size:12.5px;">Không có phân đoạn video.</td></tr>`;
+                return;
+            }
 
-            currentSegments.forEach((_, i) => {
-                const btn = document.getElementById(`segBtn-${i}`);
-                if (btn) {
-                    if (i === idx) btn.classList.add('window-active');
-                    else btn.classList.remove('window-active');
+            tbody.innerHTML = currentSegments.map((seg, idx) => {
+                const pVis = seg.p_visual_seg ?? seg.risk ?? 0;
+                const pTxt = seg.p_text_seg ?? 0;
+                const risk = seg.risk ?? 0;
+                const segType = seg.type || (seg.risk >= 50 ? 'VISION_VIOLENCE' : 'SAFE');
+                const isViolation = segType !== 'SAFE' || risk >= 50;
+
+                // Kết luận badge
+                const badgeMap = {
+                    'BOTH_VIOLATION': `<span style="background:#FFF1F2; color:#BE123C; border:1px solid #FECDD3; padding:3px 9px; border-radius:6px; font-size:11px; font-weight:600;">Vi phạm Hình &amp; Chữ</span>`,
+                    'VISION_VIOLENCE': `<span style="background:#FFF1F2; color:#BE123C; border:1px solid #FECDD3; padding:3px 9px; border-radius:6px; font-size:11px; font-weight:600;">Bạo lực Hình ảnh</span>`,
+                    'TEXT_VIOLATION': `<span style="background:#FAF5FF; color:#6D28D9; border:1px solid #DDD6FE; padding:3px 9px; border-radius:6px; font-size:11px; font-weight:600;">Ngôn từ Độc hại</span>`,
+                    'SAFE': `<span style="background:#F0FDF4; color:#15803D; border:1px solid #BBF7D0; padding:3px 9px; border-radius:6px; font-size:11px; font-weight:500;">An toàn</span>`,
+                };
+                const conclusionBadge = badgeMap[segType] || badgeMap['SAFE'];
+
+                // Visual & Text cell colors
+                const visColor = pVis >= 50 ? '#BE123C' : '#64748B';
+                const txtColor = pTxt >= 50 ? '#6D28D9' : '#64748B';
+                const riskColor = risk >= 50 ? '#BE123C' : risk >= 30 ? '#92400E' : '#15803D';
+
+                return `<tr data-idx="${idx}" onclick="seekToSegment(${idx})" style="border-bottom:1px solid #F1F5F9;">
+                    <td style="padding:11px 16px; font-weight:700; color:#0F172A; white-space:nowrap; font-variant-numeric:tabular-nums;">${seg.time_label}</td>
+                    <td style="padding:11px 16px; color:#334155; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${seg.note || ''}">${seg.note || '<span style="color:#CBD5E1">—</span>'}</td>
+                    <td style="padding:11px 16px; text-align:center; font-weight:700; color:${visColor}; font-variant-numeric:tabular-nums;">${pVis}%</td>
+                    <td style="padding:11px 16px; text-align:center; font-weight:700; color:${txtColor}; font-variant-numeric:tabular-nums;">${pTxt}%</td>
+                    <td style="padding:11px 16px; text-align:center; font-weight:700; color:${riskColor}; font-variant-numeric:tabular-nums;">${risk}%</td>
+                    <td style="padding:11px 16px;">${conclusionBadge}</td>
+                    <td style="padding:11px 16px; text-align:center;">
+                        <button onclick="event.stopPropagation(); seekToSegment(${idx})" style="background:#EFF6FF; border:1px solid #BFDBFE; color:#2563EB; border-radius:6px; padding:4px 10px; font-size:11px; font-weight:600; cursor:pointer;">
+                            Xem <i class="fa-solid fa-chevron-right" style="font-size:9px;"></i>
+                        </button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        // ===== SCENARIO LOADER =====
+        const SCENARIOS = {
+            violence: {
+                caption: 'Cảnh ẩu đả kinh hoàng giữa hai nhóm thanh niên tại khu vực trung tâm thành phố.',
+                result: {
+                    safety_score: 18,
+                    p_visual: 82,
+                    p_text: 25,
+                    detected_subtitles: ['Đánh nhau dữ dội!', 'Cảnh báo: nội dung bạo lực'],
+                    tokenized_caption: 'cảnh ẩu_đả kinh_hoàng giữa hai nhóm thanh_niên khu_vực trung_tâm thành_phố',
+                    segments: [
+                        { start: 0, time_label: '0:00–0:03', p_visual_seg: 72, p_text_seg: 5, risk: 72, type: 'VISION_VIOLENCE', note: 'Phát hiện va chạm thể xác' },
+                        { start: 3, time_label: '0:03–0:06', p_visual_seg: 91, p_text_seg: 8, risk: 91, type: 'VISION_VIOLENCE', note: 'Cảnh đánh nhau trực tiếp' },
+                        { start: 6, time_label: '0:06–0:09', p_visual_seg: 85, p_text_seg: 30, risk: 85, type: 'VISION_VIOLENCE', note: 'Tiếp tục ẩu đả' },
+                        { start: 9, time_label: '0:09–0:12', p_visual_seg: 60, p_text_seg: 25, risk: 60, type: 'VISION_VIOLENCE', note: 'Giải tán đám đông' },
+                        { start: 12, time_label: '0:12–0:15', p_visual_seg: 15, p_text_seg: 5, risk: 15, type: 'SAFE', note: 'Không phát hiện vi phạm' },
+                        { start: 15, time_label: '0:15–0:18', p_visual_seg: 8, p_text_seg: 3, risk: 8, type: 'SAFE', note: 'Cảnh bình thường' },
+                    ]
                 }
-            });
+            },
+            threat: {
+                caption: 'Mày chờ đó tao sẽ cho mày biết tay. Địt mẹ đứa nào đụng vào anh em bọn tao.',
+                result: {
+                    safety_score: 32,
+                    p_visual: 15,
+                    p_text: 88,
+                    detected_subtitles: ['Chờ đó mày!', 'Địt mẹ bọn mày', 'Tao sẽ tìm mày'],
+                    tokenized_caption: 'mày chờ đó tao cho_mày biết_tay địt_mẹ đứa đụng vào anh_em bọn tao',
+                    segments: [
+                        { start: 0, time_label: '0:00–0:03', p_visual_seg: 10, p_text_seg: 88, risk: 88, type: 'TEXT_VIOLATION', note: 'Địt mẹ bọn mày' },
+                        { start: 3, time_label: '0:03–0:06', p_visual_seg: 12, p_text_seg: 76, risk: 76, type: 'TEXT_VIOLATION', note: 'Tao sẽ tìm mày – đe dọa trực tiếp' },
+                        { start: 6, time_label: '0:06–0:09', p_visual_seg: 8, p_text_seg: 55, risk: 55, type: 'TEXT_VIOLATION', note: 'Chờ đó – đe dọa gián tiếp' },
+                        { start: 9, time_label: '0:09–0:12', p_visual_seg: 5, p_text_seg: 20, risk: 20, type: 'SAFE', note: 'Không phát hiện vi phạm' },
+                    ]
+                }
+            },
+            safe: {
+                caption: 'Chương trình giao lưu văn hóa âm nhạc dân gian truyền thống tại lễ hội mùa xuân.',
+                result: {
+                    safety_score: 94,
+                    p_visual: 3,
+                    p_text: 2,
+                    detected_subtitles: ['Lễ hội mùa xuân 2026', 'Dân ca quan họ Bắc Ninh'],
+                    tokenized_caption: 'chương_trình giao_lưu văn_hóa âm_nhạc dân_gian truyền_thống lễ_hội mùa_xuân',
+                    segments: [
+                        { start: 0, time_label: '0:00–0:03', p_visual_seg: 2, p_text_seg: 1, risk: 2, type: 'SAFE', note: 'Lễ hội mùa xuân 2026' },
+                        { start: 3, time_label: '0:03–0:06', p_visual_seg: 4, p_text_seg: 2, risk: 4, type: 'SAFE', note: 'Dân ca quan họ Bắc Ninh' },
+                        { start: 6, time_label: '0:06–0:09', p_visual_seg: 1, p_text_seg: 0, risk: 1, type: 'SAFE', note: 'Không phát hiện vi phạm' },
+                        { start: 9, time_label: '0:09–0:12', p_visual_seg: 3, p_text_seg: 2, risk: 3, type: 'SAFE', note: 'Cảnh biểu diễn văn hóa' },
+                        { start: 12, time_label: '0:12–0:15', p_visual_seg: 2, p_text_seg: 1, risk: 2, type: 'SAFE', note: 'Khán giả cổ vũ bình thường' },
+                    ]
+                }
+            }
+        };
 
-            if (userVideoPlayer && userVideoPlayer.readyState >= 1) {
-                userVideoPlayer.currentTime = seg.start;
-                userVideoPlayer.play().catch(() => {});
+        function loadScenario(type) {
+            // Update active button styles
+            document.querySelectorAll('.scenario-btn').forEach(btn => {
+                btn.classList.remove('active-danger', 'active-safe', 'active-warn');
+            });
+            const activeMap = { violence: 'active-danger', threat: 'active-warn', safe: 'active-safe' };
+            const target = document.getElementById(type === 'violence' ? 'scenarioViolence' : type === 'threat' ? 'scenarioThreat' : 'scenarioSafe');
+            if (target) target.classList.add(activeMap[type]);
+
+            const scenario = SCENARIOS[type];
+            if (!scenario) return;
+
+            // Load caption
+            captionInput.value = scenario.caption;
+            document.getElementById('charCounter').textContent = `${scenario.caption.length} ký tự`;
+
+            // Clear video state to demo mode
+            userVideoPlayer.style.display = 'none';
+            emptyPlaceholder.style.display = 'block';
+            document.getElementById('sensitiveOverlay').style.display = 'none';
+
+            setServerStatus('green', '✅ Kịch bản demo đã tải');
+
+            // Render immediately
+            renderPredictOutput(scenario.result);
+        }
+
+        // ===== API CALL =====
+        async function fetchWithRetry(url, options, maxRetries = 2, delayMs = 1200) {
+            let lastErr;
+            for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                try { return await fetch(url, options); }
+                catch (err) {
+                    lastErr = err;
+                    console.warn(`[Thử lần ${attempt}/${maxRetries}] ${err.message}`);
+                    if (attempt < maxRetries) await new Promise(r => setTimeout(r, delayMs));
+                }
+            }
+            throw lastErr;
+        }
+
+        async function sendToPredict() {
+            const captionText = captionInput.value.trim();
+            if (!selectedVideoFile && !captionText) {
+                showToast('⚠️ Vui lòng chọn Video hoặc nhập Caption trước khi phân tích!', 'info');
+                return;
+            }
+
+            const btn = document.getElementById('predictBtn');
+            const loadingBox = document.getElementById('loadingBox');
+            const icon = document.getElementById('predictBtnIcon');
+            const btnText = document.getElementById('predictBtnText');
+
+            btn.disabled = true;
+            icon.className = 'fa-solid fa-circle-notch spin';
+            btnText.textContent = 'Đang phân tích...';
+            loadingBox.style.display = 'flex';
+            setServerStatus('amber', 'Đang phân tích...');
+
+            try {
+                const formData = new FormData();
+                if (selectedVideoFile) formData.append('video', selectedVideoFile);
+                formData.append('caption', captionText);
+
+                const response = await fetchWithRetry(API_URL, { method: 'POST', body: formData }, 2, 1200);
+                if (!response.ok) {
+                    const errText = await response.text().catch(() => `HTTP ${response.status}`);
+                    throw new Error(`Lỗi Server (${response.status}): ${errText.slice(0, 120)}`);
+                }
+                const result = await response.json();
+                renderPredictOutput(result);
+                hasAnalyzed = true; // đánh dấu đã phân tích lần đầu
+                setServerStatus('green', '✅ Phân tích hoàn tất');
+
+            } catch (err) {
+                console.error('[Lỗi kết nối]', err);
+                setServerStatus('red', '⚠️ Lỗi kết nối server');
+                const isNet = err instanceof TypeError || err.message.includes('Failed to fetch');
+                showToast(isNet
+                    ? '⚠️ Không kết nối được server!\nChạy: python -m uvicorn server:app --reload'
+                    : `Lỗi: ${err.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                // Nếu đã phân tích thành công ít nhất 1 lần -> đổi thành "Chạy lại phân tích"
+                if (hasAnalyzed) {
+                    icon.className = 'fa-solid fa-rotate-right';
+                    btnText.textContent = 'Chạy lại phân tích';
+                } else {
+                    icon.className = 'fa-solid fa-magnifying-glass';
+                    btnText.textContent = 'Phân tích';
+                }
+                loadingBox.style.display = 'none';
             }
         }
+
+        // ===== TOAST =====
+        function showToast(message, type = 'info') {
+            let container = document.getElementById('toastContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toastContainer';
+                container.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;max-width:380px;';
+                document.body.appendChild(container);
+            }
+            const colors = {
+                error: 'background:#FFF1F2;border-left:4px solid #F43F5E;color:#BE123C;',
+                success: 'background:#F0FDF4;border-left:4px solid #10B981;color:#15803D;',
+                info: 'background:#EFF6FF;border-left:4px solid #2563EB;color:#1D4ED8;'
+            };
+            const toast = document.createElement('div');
+            toast.style.cssText = `${colors[type] || colors.info}padding:12px 16px;border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;line-height:1.5;box-shadow:0 4px 16px rgba(0,0,0,0.08);opacity:0;transition:opacity 0.25s;white-space:pre-wrap;`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            requestAnimationFrame(() => { toast.style.opacity = '1'; });
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+
+        // ===== INIT – Trang mở lên trống, không auto-load kịch bản =====
+        window.addEventListener('DOMContentLoaded', () => {
+            resetDashboard();
+        });
     </script>
 </body>
+
 </html>
