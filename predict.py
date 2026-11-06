@@ -25,9 +25,44 @@ except Exception as e:
     ocr_reader = None
     print(f"[CẢNH BÁO] Không thể khởi tạo EasyOCR: {e}")
 
+# ==============================================================================
+# BẢNG PATTERN WATERMARK – dùng chung cho cả filter vị trí lẫn nội dung
+# ==============================================================================
+_WATERMARK_RE = re.compile(
+    r'(@\w+)'                                   # @username
+    r'|(tiktok|youtube|facebook|instagram|zalo'  # tên nền tảng
+    r'|fanpage|follow|subscribe)'
+    r'|(\d{1,2}[./]\d{1,2}[./]\d{2,4})'        # ngày tháng: 21.08.2026
+    r'|(www\.|https?://|\.com|\.vn|\.net)'       # URL
+    r'|(dự kiến|khởi chiếu|ra mắt|premiere)',    # thông báo marketing
+    re.IGNORECASE | re.UNICODE,
+)
+
+def _is_watermark_text(text: str) -> bool:
+    """Trả về True nếu đoạn text trông như watermark / overlay quảng cáo."""
+    if not text or len(text.strip()) < 2:
+        return True
+    if _WATERMARK_RE.search(text):
+        return True
+    # Quá nhiều ký tự đặc biệt hoặc số → không phải thoại
+    alpha_ratio = sum(c.isalpha() for c in text) / max(len(text), 1)
+    if alpha_ratio < 0.45 and len(text) < 20:
+        return True
+    return False
+
+
 def extract_subtitle_from_frame(frame_bgr) -> str:
     """
-    Trích xuất chữ / phụ đề trên khung hình video bằng EasyOCR kết hợp xử lý ảnh OpenCV.
+    Trích xuất phụ đề / thoại nhân vật từ VÙNG PHỤ ĐỀ (bottom-center).
+
+    Tối ưu tốc độ:
+      • Chỉ OCR vùng đáy frame (60-95% chiều cao, 10-90% chiều rộng)
+        → diện tích chỉ còn ~1/4 so với full frame.
+      • Upscale nhẹ hơn (1.5x thay vì 2x) vì vùng đã nhỏ hơn.
+
+    Lọc watermark:
+      • Dùng detail=1 để lấy bounding-box + confidence từng text box.
+      • Chỉ giữ box có confidence ≥ 0.45 và không khớp pattern watermark.
     """
     if ocr_reader is None or frame_bgr is None:
         return ""
@@ -35,16 +70,43 @@ def extract_subtitle_from_frame(frame_bgr) -> str:
         if frame_bgr.dtype != np.uint8:
             frame_bgr = frame_bgr.astype(np.uint8)
 
-        # 1. Chuyển sang ảnh xám để loại bỏ nhiễu màu phức tạp
-        gray = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2GRAY)
+        h, w = frame_bgr.shape[:2]
 
-        # 2. Phóng to gấp đôi để EasyOCR dễ dàng bắt nét các dòng phụ đề nhỏ
-        resized = cv2.resize(gray, (0, 0), fx=2.0, fy=2.0, interpolation=cv2.INTER_CUBIC)
+        # ── 1. Crop vùng subtitle (bottom 35%, loại bỏ 10% hai bên) ──────────
+        y0 = int(h * 0.62)
+        y1 = int(h * 0.97)          # bỏ dải đen sát đáy
+        x0 = int(w * 0.08)
+        x1 = int(w * 0.92)
+        zone = frame_bgr[y0:y1, x0:x1]
+        if zone.size == 0:
+            return ""
 
-        # 3. Gọi EasyOCR đọc văn bản
-        results = ocr_reader.readtext(resized, detail=0, paragraph=True)
-        
-        detected_text = " ".join(results).strip()
+        # ── 2. Grayscale + upscale vừa đủ ────────────────────────────────────
+        gray = cv2.cvtColor(zone, cv2.COLOR_BGR2GRAY)
+        resized = cv2.resize(gray, (0, 0), fx=1.5, fy=1.5,
+                             interpolation=cv2.INTER_CUBIC)
+
+        # ── 3. EasyOCR với detail=1 để lọc theo confidence & position ────────
+        raw_results = ocr_reader.readtext(
+            resized, detail=1, paragraph=False,
+            text_threshold=0.5, low_text=0.3,
+        )
+
+        # ── 4. Lọc watermark & ghép text ─────────────────────────────────────
+        lines = []
+        rh = resized.shape[0]
+        for (bbox, text, conf) in raw_results:
+            text = text.strip()
+            if not text or conf < 0.45:
+                continue
+            if _is_watermark_text(text):
+                continue
+            # Bỏ thêm text quá nhỏ (< 3 ký tự) hoặc chỉ toàn số
+            if len(text) < 3 or text.isdigit():
+                continue
+            lines.append(text)
+
+        detected_text = " ".join(lines).strip()
         if detected_text:
             print(f"[EASYOCR ĐỌC ĐƯỢC CHỮ]: {detected_text}")
         return detected_text
@@ -274,36 +336,54 @@ def process_video_dual_stream(video_path: str, window_sec=3, num_frames=16, img_
     max_p_visual = 0.0
     max_p_video_text = 0.0
 
-    # QUÉT OCR THÔNG MINH (SIÊU TỐC): Chỉ chạy OCR trên khung hình giữa video để bắt trọn phụ đề mà không làm chậm máy
-    global_sub_text = ""
-    if keyframes_for_ocr:
-        mid_idx = len(keyframes_for_ocr) // 2
-        global_sub_text = extract_subtitle_from_frame(keyframes_for_ocr[mid_idx])
-        if global_sub_text:
-            max_p_video_text = predict_text_risk(global_sub_text)
-            detected_subtitles.append(f"[Phụ đề video] {global_sub_text}")
+    # QUÉT OCR TỪNG PHÂN ĐOẠN với dedup: bỏ qua OCR nếu frame thực tế giống hệt frame trước
+    seg_sub_texts = []
+    _prev_hash = None
+    _prev_text = ""
+    for kf in keyframes_for_ocr:
+        # Tính hash nhanh từ thumbnail nhỏ của vùng subtitle
+        if kf is not None:
+            _thumb = cv2.resize(kf, (64, 20))
+            _hash = hash(_thumb.tobytes())
+        else:
+            _hash = None
+
+        if _hash is not None and _hash == _prev_hash:
+            # Frame gần như giống hệt → tái sử dụng kết quả OCR trước
+            sub_text = _prev_text
+        else:
+            sub_text = extract_subtitle_from_frame(kf)
+            _prev_hash = _hash
+            _prev_text = sub_text
+
+        seg_sub_texts.append(sub_text)
+        if sub_text and f"[Phụ đề video] {sub_text}" not in detected_subtitles:
+            detected_subtitles.append(f"[Phụ đề video] {sub_text}")
 
     for i, (start_sec, end_sec) in enumerate(seg_times):
         p_vis = vision_probs[i]
         max_p_visual = max(max_p_visual, p_vis)
 
-        p_sub = max_p_video_text if global_sub_text else 0.0
+        seg_sub_text = seg_sub_texts[i] if i < len(seg_sub_texts) else ""
+        p_sub = predict_text_risk(seg_sub_text) if seg_sub_text else 0.0
+        max_p_video_text = max(max_p_video_text, p_sub)
+
         seg_risk = round(max(p_vis, p_sub) * 100, 1)
         vis_violent = p_vis >= 0.5
         sub_toxic = p_sub >= 0.5
 
         if vis_violent and sub_toxic:
             seg_type = "BOTH_VIOLATION"
-            note = f"Bạo lực & Phụ đề độc hại: '{global_sub_text}'"
+            note = f"Bạo lực & Phụ đề độc hại: '{seg_sub_text}'"
         elif vis_violent:
             seg_type = "VISION_VIOLENCE"
             note = f"Phát hiện hành vi xô xát, bạo lực thị giác ({round(p_vis*100,1)}%)"
         elif sub_toxic:
             seg_type = "TEXT_VIOLATION"
-            note = f"Phát hiện phụ đề độc hại: '{global_sub_text}'"
+            note = f"Phát hiện phụ đề độc hại: '{seg_sub_text}'"
         else:
             seg_type = "SAFE"
-            note = "An toàn" + (f" (Chữ trên video: '{global_sub_text}')" if global_sub_text else "")
+            note = "An toàn" + (f" (Chữ trên video: '{seg_sub_text}')" if seg_sub_text else "")
 
         segments.append({
             "start": start_sec,
@@ -312,7 +392,7 @@ def process_video_dual_stream(video_path: str, window_sec=3, num_frames=16, img_
             "risk": seg_risk,
             "p_visual_seg": round(p_vis * 100, 1),
             "p_text_seg": round(p_sub * 100, 1),
-            "subtitle": global_sub_text,
+            "subtitle": seg_sub_text,
             "type": seg_type,
             "note": note
         })
